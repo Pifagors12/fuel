@@ -3,7 +3,7 @@
 /* eslint-disable */
 
 import type { Provider, BaseWalletLocked, AbstractAddress } from "fuels";
-import { Interface, Contract } from "fuels";
+import { Interface, Contract, ContractId } from "fuels";
 import type { ContractAbi, ContractAbiInterface } from "../ContractAbi";
 const _abi = [
   {
@@ -41,7 +41,7 @@ export class ContractAbi__factory {
     return new Interface(_abi) as unknown as ContractAbiInterface;
   }
   static connect(
-    id: string | AbstractAddress,
+    id: ContractId,
     walletOrProvider: BaseWalletLocked | Provider
   ): ContractAbi {
     return new Contract(id, _abi, walletOrProvider) as unknown as ContractAbi;

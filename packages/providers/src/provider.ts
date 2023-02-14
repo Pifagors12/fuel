@@ -6,7 +6,7 @@ import type { InputValue } from '@fuel-ts/abi-coder';
 import { AbiCoder } from '@fuel-ts/abi-coder';
 import { Address } from '@fuel-ts/address';
 import { NativeAssetId } from '@fuel-ts/constants';
-import type { AbstractAddress, AbstractPredicate } from '@fuel-ts/interfaces';
+import type { AbstractAddress, AbstractPredicate, ContractId } from '@fuel-ts/interfaces';
 import type { BigNumberish, BN } from '@fuel-ts/math';
 import { max, bn } from '@fuel-ts/math';
 import type { Transaction } from '@fuel-ts/transactions';
@@ -362,7 +362,7 @@ export default class Provider {
       transactionRequest.addVariableOutputs(missingOutputVariableCount);
 
       missingOutputContractIds.forEach(({ contractId }) =>
-        transactionRequest.addContract(Address.fromString(contractId))
+        transactionRequest.addContract(contractId)
       );
       tries += 1;
     } while (tries < MAX_RETRIES);
@@ -608,12 +608,12 @@ export default class Provider {
    */
   async getContractBalance(
     /** The contract ID to get the balance for */
-    contractId: AbstractAddress,
+    contractId: ContractId,
     /** The asset ID of coins to get */
     assetId: BytesLike
   ): Promise<BN> {
     const { contractBalance } = await this.operations.getContractBalance({
-      contract: contractId.toB256(),
+      contract: contractId,
       asset: hexlify(assetId),
     });
     return bn(contractBalance.amount, 10);

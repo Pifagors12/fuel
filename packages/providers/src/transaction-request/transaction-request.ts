@@ -3,12 +3,7 @@ import type { BytesLike } from '@ethersproject/bytes';
 import { arrayify, hexlify } from '@ethersproject/bytes';
 import { addressify } from '@fuel-ts/address';
 import { NativeAssetId, ZeroBytes32 } from '@fuel-ts/constants';
-import type {
-  AddressLike,
-  AbstractAddress,
-  ContractIdLike,
-  AbstractScript,
-} from '@fuel-ts/interfaces';
+import type { AddressLike, AbstractAddress, AbstractScript, ContractId } from '@fuel-ts/interfaces';
 import type { BigNumberish, BN } from '@fuel-ts/math';
 import { bn } from '@fuel-ts/math';
 import type { TransactionCreate, TransactionScript } from '@fuel-ts/transactions';
@@ -499,17 +494,15 @@ export class ScriptTransactionRequest extends BaseTransactionRequest {
     return this.outputs.length - 1;
   }
 
-  addContract(contract: ContractIdLike) {
-    const contractAddress = addressify(contract);
-
+  addContract(contractId: ContractId) {
     // Add only one input contract per contractId
-    if (this.getContractInputs().find((i) => i.contractId === contractAddress.toB256())) {
+    if (this.getContractInputs().find((i) => hexlify(i.contractId) === contractId)) {
       return;
     }
 
     const inputIndex = super.pushInput({
       type: InputType.Contract,
-      contractId: contractAddress.toB256(),
+      contractId,
       txPointer: '0x00000000000000000000000000000000',
     });
 

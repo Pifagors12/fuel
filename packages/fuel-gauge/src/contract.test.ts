@@ -161,8 +161,8 @@ describe('Contract', () => {
     // #endregion
 
     expect(scope.transactionRequest.getContractInputs()).toEqual([
-      { contractId: contract.id.toB256(), type: 1, txPointer },
-      { contractId: otherContract.id.toB256(), type: 1, txPointer },
+      { contractId: contract.id, type: 1, txPointer },
+      { contractId: otherContract.id, type: 1, txPointer },
     ]);
 
     expect(scope.transactionRequest.getContractOutputs()).toEqual([
@@ -212,8 +212,8 @@ describe('Contract', () => {
     const scope = contract.multiCall([contract.functions.foo(1336)]).addContracts([otherContract]);
 
     expect(scope.transactionRequest.getContractInputs()).toEqual([
-      { contractId: contract.id.toB256(), type: 1, txPointer },
-      { contractId: otherContract.id.toB256(), type: 1, txPointer },
+      { contractId: contract.id, type: 1, txPointer },
+      { contractId: otherContract.id, type: 1, txPointer },
     ]);
 
     expect(scope.transactionRequest.getContractOutputs()).toEqual([
@@ -698,8 +698,8 @@ describe('Contract', () => {
   test('Read only call', async () => {
     // #region typedoc:Contract-read-only-call
     const contract = await setupContract();
-    const { value } = await contract.functions.echo_b256(contract.id.toB256()).get();
-    expect(value).toEqual(contract.id.toB256());
+    const { value } = await contract.functions.echo_b256(contract.id).get();
+    expect(value).toEqual(contract.id);
     // #endregion
   });
 });

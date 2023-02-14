@@ -90,15 +90,10 @@ export function normalizeBech32(address: Bech32Address): Bech32Address {
   return bech32m.encode(FUEL_BECH32_HRP_PREFIX, words) as Bech32Address;
 }
 
-export const addressify = (addressLike: AddressLike | ContractIdLike): AbstractAddress => {
+export const addressify = (addressLike: AddressLike): AbstractAddress => {
   if (addressLike instanceof AbstractWallet) {
     return addressLike.address;
   }
-
-  if (addressLike instanceof AbstractContract) {
-    return addressLike.id;
-  }
-
   return addressLike;
 };
 

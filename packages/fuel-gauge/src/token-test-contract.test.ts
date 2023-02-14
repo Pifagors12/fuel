@@ -53,7 +53,7 @@ describe('TokenTestContract', () => {
     // #endregion
     // Check new wallet received the coins from the token contract
     const balances = await userWallet.getBalances();
-    const tokenBalance = balances.find((b) => b.assetId === token.id.toB256());
+    const tokenBalance = balances.find((b) => b.assetId === token.id);
     expect(tokenBalance?.amount.toHex()).toEqual(toHex(50));
   });
 
@@ -71,15 +71,15 @@ describe('TokenTestContract', () => {
     await functionCallOne.call();
 
     let balances = await wallet1.getBalances();
-    let tokenBalance = balances.find((b) => b.assetId === token.id.toB256());
+    let tokenBalance = balances.find((b) => b.assetId === token.id);
     expect(tokenBalance?.amount.toHex()).toEqual(toHex(10));
 
     balances = await wallet2.getBalances();
-    tokenBalance = balances.find((b) => b.assetId === token.id.toB256());
+    tokenBalance = balances.find((b) => b.assetId === token.id);
     expect(tokenBalance?.amount.toHex()).toEqual(toHex(10));
 
     balances = await wallet3.getBalances();
-    tokenBalance = balances.find((b) => b.assetId === token.id.toB256());
+    tokenBalance = balances.find((b) => b.assetId === token.id);
     expect(tokenBalance?.amount.toHex()).toEqual(toHex(10));
 
     const functionCallTwo = token.functions.mint_to_addresses(10, addresses);
@@ -87,28 +87,28 @@ describe('TokenTestContract', () => {
     await functionCallTwo.call();
 
     balances = await wallet1.getBalances();
-    tokenBalance = balances.find((b) => b.assetId === token.id.toB256());
+    tokenBalance = balances.find((b) => b.assetId === token.id);
     expect(tokenBalance?.amount.toHex()).toEqual(toHex(20));
 
     balances = await wallet2.getBalances();
-    tokenBalance = balances.find((b) => b.assetId === token.id.toB256());
+    tokenBalance = balances.find((b) => b.assetId === token.id);
     expect(tokenBalance?.amount.toHex()).toEqual(toHex(20));
 
     balances = await wallet3.getBalances();
-    tokenBalance = balances.find((b) => b.assetId === token.id.toB256());
+    tokenBalance = balances.find((b) => b.assetId === token.id);
     expect(tokenBalance?.amount.toHex()).toEqual(toHex(20));
 
     await token.functions.mint_to_addresses(10, addresses).call();
     balances = await wallet1.getBalances();
-    tokenBalance = balances.find((b) => b.assetId === token.id.toB256());
+    tokenBalance = balances.find((b) => b.assetId === token.id);
     expect(tokenBalance?.amount.toHex()).toEqual(toHex(30));
 
     balances = await wallet2.getBalances();
-    tokenBalance = balances.find((b) => b.assetId === token.id.toB256());
+    tokenBalance = balances.find((b) => b.assetId === token.id);
     expect(tokenBalance?.amount.toHex()).toEqual(toHex(30));
 
     balances = await wallet3.getBalances();
-    tokenBalance = balances.find((b) => b.assetId === token.id.toB256());
+    tokenBalance = balances.find((b) => b.assetId === token.id);
     expect(tokenBalance?.amount.toHex()).toEqual(toHex(30));
   });
 
@@ -122,7 +122,7 @@ describe('TokenTestContract', () => {
       value: userWallet.address,
     };
 
-    const getBalance = async () => token.getBalance(token.id.toB256());
+    const getBalance = async () => token.getBalance(token.id);
 
     // mint 100 coins
     await token.functions.mint_coins(100, 1).call();

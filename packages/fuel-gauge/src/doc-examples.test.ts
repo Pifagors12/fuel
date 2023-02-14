@@ -138,10 +138,10 @@ test('it has conversion tools', async () => {
   const arrayB256: Uint8Array = arrayify(randomB256Bytes);
   const walletLike: WalletLocked = Wallet.fromAddress(address);
   const provider = new Provider('http://localhost:4000/graphql');
-  const contractLike: Contract = new Contract(address, abiJSON, provider);
+  const contractLike: Contract = new Contract(hexedB256, abiJSON, provider);
 
   expect(address.equals(addressify(walletLike) as Address)).toBeTruthy();
-  expect(address.equals(contractLike.id as Address)).toBeTruthy();
+  expect(hexedB256).toEqual(contractLike.id);
   expect(address.toBytes()).toEqual(arrayB256);
   expect(address.toB256()).toEqual(hexedB256);
   expect(arrayify(address.toB256())).toEqual(arrayB256);
@@ -512,33 +512,33 @@ test('deposit and withdraw cookbook guide', async () => {
     .callParams({
       forward: {
         amount: bn(100),
-        assetId: tokenContractID.toB256(),
+        assetId: tokenContractID,
       },
     })
     .call();
   // #endregion
 
   // verify balances
-  expect(await wallet.getBalance(tokenContractID.toB256())).toEqual(bn(100));
-  expect(await wallet.getBalance(liquidityPoolContractID.toB256())).toEqual(bn(200));
+  expect(await wallet.getBalance(tokenContractID)).toEqual(bn(100));
+  expect(await wallet.getBalance(liquidityPoolContractID)).toEqual(bn(200));
 
   // withdraw base tokens from the liquidity pool
   // #region typedoc:deposit-and-withdraw-cookbook-withdraw
-  const lpTokenBalance = await wallet.getBalance(liquidityPoolContractID.toB256());
+  const lpTokenBalance = await wallet.getBalance(liquidityPoolContractID);
   await liquidityPoolContract.functions
     .withdraw({
-      value: wallet.address.toB256(),
+      value: wallet.address,
     })
     .callParams({
       forward: {
         amount: lpTokenBalance,
-        assetId: liquidityPoolContractID.toB256(),
+        assetId: liquidityPoolContractID,
       },
     })
     .call();
   // #endregion
 
   // verify balances again
-  expect(await wallet.getBalance(tokenContractID.toB256())).toEqual(bn(200));
-  expect(await wallet.getBalance(liquidityPoolContractID.toB256())).toEqual(bn(0));
+  expect(await wallet.getBalance(tokenContractID)).toEqual(bn(200));
+  expect(await wallet.getBalance(liquidityPoolContractID)).toEqual(bn(0));
 });

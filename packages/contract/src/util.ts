@@ -1,9 +1,12 @@
 import type { BytesLike, DataOptions } from '@ethersproject/bytes';
-import { hexlify, arrayify, concat } from '@ethersproject/bytes';
+import { isHexString, hexlify, arrayify, concat } from '@ethersproject/bytes';
 import { sha256 } from '@ethersproject/sha2';
+import type { ContractId } from '@fuel-ts/interfaces';
 import { calcRoot } from '@fuel-ts/merkle';
 import SparseMerkleTree from '@fuel-ts/sparsemerkle';
 import type { StorageSlot } from '@fuel-ts/transactions';
+
+import { Contract } from './index';
 
 export const getContractRoot = (bytecode: Uint8Array): string => {
   const chunkSize = 8;
@@ -48,3 +51,13 @@ export const includeHexPrefix = (value: string, options?: DataOptions) =>
     ...options,
     allowMissingPrefix: true,
   });
+
+export function isContractId(address: string): address is ContractId {
+  return address.length === 66 && /0x[0-9a-f]{64}$/i.test(address);
+}
+
+export function assertContractId(address: string): asserts address is ContractId {
+  if (!isContractId(address)) {
+    throw new Error(`Invalid contract id: ${address}`);
+  }
+}
