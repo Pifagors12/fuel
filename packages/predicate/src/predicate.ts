@@ -3,24 +3,23 @@ import { arrayify } from '@ethersproject/bytes';
 import { Logger } from '@ethersproject/logger';
 import { Interface } from '@fuel-ts/abi-coder';
 import type { JsonAbiFragmentType, JsonAbi } from '@fuel-ts/abi-coder';
-import { Address } from '@fuel-ts/address';
 import { ContractUtils } from '@fuel-ts/contract';
 import { AbstractPredicate } from '@fuel-ts/interfaces';
-import type { AbstractAddress } from '@fuel-ts/interfaces';
+import type { AddressNew } from '@fuel-ts/interfaces';
 import { versions } from '@fuel-ts/versions';
 
 const logger = new Logger(versions.FUELS);
 
 export class Predicate extends AbstractPredicate {
   bytes: Uint8Array;
-  address: AbstractAddress;
+  address: AddressNew;
   types?: ReadonlyArray<JsonAbiFragmentType>;
   interface?: Interface;
 
   constructor(bytes: BytesLike, types?: JsonAbi) {
     super();
     this.bytes = arrayify(bytes);
-    this.address = Address.fromB256(ContractUtils.getContractRoot(this.bytes));
+    this.address = ContractUtils.getContractRoot(this.bytes);
 
     if (types) {
       this.interface = new Interface(types as JsonAbi);

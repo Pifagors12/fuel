@@ -1,9 +1,15 @@
 /* eslint-disable max-classes-per-file */
 import type { BytesLike } from '@ethersproject/bytes';
 import { arrayify, hexlify } from '@ethersproject/bytes';
-import { addressify } from '@fuel-ts/address';
+import { addressify, addressTo256 } from '@fuel-ts/address';
 import { NativeAssetId, ZeroBytes32 } from '@fuel-ts/constants';
-import type { AddressLike, AbstractAddress, AbstractScript, ContractId } from '@fuel-ts/interfaces';
+import type {
+  AddressLike,
+  AbstractAddress,
+  AbstractScript,
+  ContractId,
+  AddressNew,
+} from '@fuel-ts/interfaces';
 import type { BigNumberish, BN } from '@fuel-ts/math';
 import { bn } from '@fuel-ts/math';
 import type { TransactionCreate, TransactionScript } from '@fuel-ts/transactions';
@@ -102,7 +108,7 @@ export class NoWitnessAtIndexError extends Error {
 
 export class NoWitnessByOwnerError extends Error {
   name = 'NoWitnessByOwnerError';
-  constructor(public readonly owner: AbstractAddress) {
+  constructor(public readonly owner: AddressNew) {
     super();
     this.message = `A witness for the given owner "${owner}" was not found`;
   }
@@ -228,12 +234,12 @@ abstract class BaseTransactionRequest implements BaseTransactionRequestLike {
   /**
    * Returns the witnessIndex of the found CoinInput
    */
-  getCoinInputWitnessIndexByOwner(owner: AddressLike): number | null {
-    const ownerAddress = addressify(owner);
+  getCoinInputWitnessIndexByOwner(owner: AddressNew): number | null {
+    const ownerAddress = addressTo256(owner);
     return (
       this.inputs.find(
         (input): input is CoinTransactionRequestInput =>
-          input.type === InputType.Coin && hexlify(input.owner) === ownerAddress.toB256()
+          input.type === InputType.Coin && hexlify(input.owner) === addressTo256(ownerAddress)
       )?.witnessIndex ?? null
     );
   }
@@ -241,11 +247,11 @@ abstract class BaseTransactionRequest implements BaseTransactionRequestLike {
   /**
    * Updates the witness for the given CoinInput owner
    */
-  updateWitnessByCoinInputOwner(owner: AddressLike, witness: BytesLike) {
+  updateWitnessByCoinInputOwner(owner: AddressNew, witness: BytesLike) {
     const witnessIndex = this.getCoinInputWitnessIndexByOwner(owner);
 
     if (!witnessIndex) {
-      throw new NoWitnessByOwnerError(addressify(owner));
+      throw new NoWitnessByOwnerError(owner);
     }
 
     this.updateWitness(witnessIndex, witness);
@@ -258,7 +264,7 @@ abstract class BaseTransactionRequest implements BaseTransactionRequestLike {
     const ownerAddress = isCoin(resource) ? resource.owner : resource.recipient;
     const assetId = isCoin(resource) ? resource.assetId : NativeAssetId;
     const type = isCoin(resource) ? InputType.Coin : InputType.Message;
-    let witnessIndex = this.getCoinInputWitnessIndexByOwner(ownerAddress);
+    let witnessIndex = this.getCoinInputWitnessIndexByOwner(addressTo256(ownerAddress));
 
     // Insert a dummy witness if no witness exists
     if (typeof witnessIndex !== 'number') {
@@ -291,7 +297,7 @@ abstract class BaseTransactionRequest implements BaseTransactionRequestLike {
     );
 
     // Throw if the existing ChangeOutput is not for the same owner
-    if (changeOutput && hexlify(changeOutput.to) !== ownerAddress.toB256()) {
+    if (changeOutput && hexlify(changeOutput.to) !== addressTo256(ownerAddress)) {
       throw new ChangeOutputCollisionError();
     }
 
@@ -299,7 +305,7 @@ abstract class BaseTransactionRequest implements BaseTransactionRequestLike {
     if (!changeOutput) {
       this.pushOutput({
         type: OutputType.Change,
-        to: ownerAddress.toB256(),
+        to: addressTo256(ownerAddress),
         assetId,
       });
     }
@@ -311,7 +317,7 @@ abstract class BaseTransactionRequest implements BaseTransactionRequestLike {
 
   addCoinOutput(
     /** Address of the destination */
-    to: AddressLike,
+    to: AddressNew,
     /** Amount of coins */
     amount: BigNumberish,
     /** Asset ID of coins */
@@ -319,7 +325,7 @@ abstract class BaseTransactionRequest implements BaseTransactionRequestLike {
   ) {
     this.pushOutput({
       type: OutputType.Coin,
-      to: addressify(to).toB256(),
+      to: addressTo256(to),
       amount,
       assetId,
     });

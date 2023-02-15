@@ -4,9 +4,9 @@ import { arrayify, hexlify } from '@ethersproject/bytes';
 import type { Network } from '@ethersproject/networks';
 import type { InputValue } from '@fuel-ts/abi-coder';
 import { AbiCoder } from '@fuel-ts/abi-coder';
-import { Address } from '@fuel-ts/address';
+import { addressTo256, toBech32 } from '@fuel-ts/address';
 import { NativeAssetId } from '@fuel-ts/constants';
-import type { AbstractAddress, AbstractPredicate, ContractId } from '@fuel-ts/interfaces';
+import type { AbstractPredicate, AddressNew, ContractId } from '@fuel-ts/interfaces';
 import type { BigNumberish, BN } from '@fuel-ts/math';
 import { max, bn } from '@fuel-ts/math';
 import type { Transaction } from '@fuel-ts/transactions';
@@ -434,7 +434,7 @@ export default class Provider {
    */
   async getCoins(
     /** The address to get coins for */
-    owner: AbstractAddress,
+    owner: AddressNew,
     /** The asset ID of coins to get */
     assetId?: BytesLike,
     /** Pagination arguments */
@@ -443,7 +443,7 @@ export default class Provider {
     const result = await this.operations.getCoins({
       first: 10,
       ...paginationArgs,
-      filter: { owner: owner.toB256(), assetId: assetId && hexlify(assetId) },
+      filter: { owner: addressTo256(owner), assetId: assetId && hexlify(assetId) },
     });
 
     const coins = result.coins.edges!.map((edge) => edge!.node!);
@@ -452,7 +452,7 @@ export default class Provider {
       id: coin.utxoId,
       assetId: coin.assetId,
       amount: bn(coin.amount),
-      owner: Address.fromAddressOrString(coin.owner),
+      owner: toBech32(coin.owner),
       status: coin.status,
       maturity: bn(coin.maturity).toNumber(),
       blockCreated: bn(coin.blockCreated),
@@ -464,7 +464,7 @@ export default class Provider {
    */
   async getResourcesToSpend(
     /** The address to get coins for */
-    owner: AbstractAddress,
+    owner: AddressNew,
     /** The quantities to get */
     quantities: CoinQuantityLike[],
     /** IDs of excluded resources from the selection. */
@@ -475,7 +475,7 @@ export default class Provider {
       utxos: excludedIds?.utxos?.map((id) => hexlify(id)) || [],
     };
     const result = await this.operations.getResourcesToSpend({
-      owner: owner.toB256(),
+      owner: addressTo256(owner),
       queryPerAsset: quantities
         .map(coinQuantityfy)
         .map(({ assetId, amount, max: maxPerAsset }) => ({
@@ -493,15 +493,15 @@ export default class Provider {
           amount: bn(resource.amount),
           status: resource.status,
           assetId: resource.assetId,
-          owner: Address.fromAddressOrString(resource.owner),
+          owner: toBech32(resource.owner),
           maturity: bn(resource.maturity).toNumber(),
           blockCreated: bn(resource.blockCreated),
         };
       }
 
       return {
-        sender: Address.fromAddressOrString(resource.sender),
-        recipient: Address.fromAddressOrString(resource.recipient),
+        sender: toBech32(resource.sender),
+        recipient: toBech32(resource.recipient),
         nonce: bn(resource.nonce),
         amount: bn(resource.amount),
         data: InputMessageCoder.decodeData(resource.data),
@@ -624,12 +624,12 @@ export default class Provider {
    */
   async getBalance(
     /** The address to get coins for */
-    owner: AbstractAddress,
+    owner: AddressNew,
     /** The asset ID of coins to get */
     assetId: BytesLike
   ): Promise<BN> {
     const { balance } = await this.operations.getBalance({
-      owner: owner.toB256(),
+      owner: addressTo256(owner),
       assetId: hexlify(assetId),
     });
     return bn(balance.amount, 10);
@@ -640,14 +640,14 @@ export default class Provider {
    */
   async getBalances(
     /** The address to get coins for */
-    owner: AbstractAddress,
+    owner: AddressNew,
     /** Pagination arguments */
     paginationArgs?: CursorPaginationArgs
   ): Promise<CoinQuantity[]> {
     const result = await this.operations.getBalances({
       first: 10,
       ...paginationArgs,
-      filter: { owner: owner.toB256() },
+      filter: { owner: addressTo256(owner) },
     });
 
     const balances = result.balances.edges!.map((edge) => edge!.node!);
@@ -663,21 +663,21 @@ export default class Provider {
    */
   async getMessages(
     /** The address to get message from */
-    address: AbstractAddress,
+    address: AddressNew,
     /** Pagination arguments */
     paginationArgs?: CursorPaginationArgs
   ): Promise<Message[]> {
     const result = await this.operations.getMessages({
       first: 10,
       ...paginationArgs,
-      owner: address.toB256(),
+      owner: addressTo256(address),
     });
 
     const messages = result.messages.edges!.map((edge) => edge!.node!);
 
     return messages.map((message) => ({
-      sender: Address.fromAddressOrString(message.sender),
-      recipient: Address.fromAddressOrString(message.recipient),
+      sender: toBech32(message.sender),
+      recipient: toBech32(message.recipient),
       nonce: bn(message.nonce),
       amount: bn(message.amount),
       data: InputMessageCoder.decodeData(message.data),
@@ -707,8 +707,8 @@ export default class Provider {
     return {
       proofSet: result.messageProof.proofSet,
       proofIndex: bn(result.messageProof.proofIndex),
-      sender: Address.fromAddressOrString(result.messageProof.sender),
-      recipient: Address.fromAddressOrString(result.messageProof.recipient),
+      sender: toBech32(result.messageProof.sender),
+      recipient: toBech32(result.messageProof.recipient),
       nonce: result.messageProof.nonce,
       amount: bn(result.messageProof.amount),
       data: result.messageProof.data,
@@ -731,11 +731,11 @@ export default class Provider {
   async buildSpendPredicate<T>(
     predicate: AbstractPredicate,
     amountToSpend: BigNumberish,
-    receiverAddress: AbstractAddress,
+    receiverAddress: AddressNew,
     predicateData?: InputValue<T>[],
     assetId: BytesLike = NativeAssetId,
     predicateOptions?: BuildPredicateOptions,
-    walletAddress?: AbstractAddress
+    walletAddress?: AddressNew
   ): Promise<ScriptTransactionRequest> {
     const predicateResources: Resource[] = await this.getResourcesToSpend(predicate.address, [
       [amountToSpend, assetId],
@@ -785,11 +785,11 @@ export default class Provider {
   async submitSpendPredicate<T>(
     predicate: AbstractPredicate,
     amountToSpend: BigNumberish,
-    receiverAddress: AbstractAddress,
+    receiverAddress: AddressNew,
     predicateData?: InputValue<T>[],
     assetId: BytesLike = NativeAssetId,
     options?: BuildPredicateOptions,
-    walletAddress?: AbstractAddress
+    walletAddress?: AddressNew
   ): Promise<TransactionResult<'success'>> {
     const request = await this.buildSpendPredicate<T>(
       predicate,

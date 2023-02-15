@@ -1,14 +1,9 @@
 import type { BytesLike } from '@ethersproject/bytes';
 import { arrayify, hexlify } from '@ethersproject/bytes';
 import { Logger } from '@ethersproject/logger';
-import { AbstractContract, AbstractWallet } from '@fuel-ts/interfaces';
-import type {
-  Bech32Address,
-  B256Address,
-  AddressLike,
-  ContractIdLike,
-  AbstractAddress,
-} from '@fuel-ts/interfaces';
+import { sha256 } from '@ethersproject/sha2';
+import { AbstractWallet } from '@fuel-ts/interfaces';
+import type { Bech32Address, B256Address, AddressLike, AddressB256 } from '@fuel-ts/interfaces';
 import { randomBytes } from '@fuel-ts/keystore';
 import { versions } from '@fuel-ts/versions';
 import type { Decoded } from 'bech32';
@@ -90,7 +85,7 @@ export function normalizeBech32(address: Bech32Address): Bech32Address {
   return bech32m.encode(FUEL_BECH32_HRP_PREFIX, words) as Bech32Address;
 }
 
-export const addressify = (addressLike: AddressLike): AbstractAddress => {
+export const addressify = (addressLike: AddressLike) => {
   if (addressLike instanceof AbstractWallet) {
     return addressLike.address;
   }
@@ -98,3 +93,16 @@ export const addressify = (addressLike: AddressLike): AbstractAddress => {
 };
 
 export const getRandomB256 = () => hexlify(randomBytes(32));
+
+export const addressTo256 = (address: string): AddressB256 => {
+  if (isB256(address)) {
+    return address;
+  }
+  if (isBech32(address)) {
+    return toB256(address as Bech32Address);
+  }
+  if (isPublicKey(address)) {
+    return hexlify(sha256(arrayify(address)));
+  }
+  throw new Error('Invalid address format');
+};

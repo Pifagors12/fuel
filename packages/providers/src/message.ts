@@ -1,5 +1,5 @@
 import type { BytesLike } from '@ethersproject/bytes';
-import type { AbstractAddress } from '@fuel-ts/interfaces';
+import type { AddressNew } from '@fuel-ts/interfaces';
 import type { BN } from '@fuel-ts/math';
 
 // #region typedoc:Message-shape
@@ -7,8 +7,8 @@ import type { BN } from '@fuel-ts/math';
  * A Fuel message
  */
 export type Message = {
-  sender: AbstractAddress;
-  recipient: AbstractAddress;
+  sender: AddressNew;
+  recipient: AddressNew;
   nonce: BN;
   amount: BN;
   data: BytesLike;
@@ -23,8 +23,8 @@ export type Message = {
 export type MessageProof = {
   proofSet: Array<string>;
   proofIndex: BN;
-  sender: AbstractAddress;
-  recipient: AbstractAddress;
+  sender: AddressNew;
+  recipient: AddressNew;
   nonce: string;
   amount: BN;
   data: string;

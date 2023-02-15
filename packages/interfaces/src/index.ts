@@ -5,12 +5,15 @@ export type Bech32Address = `fuel${string}`;
 // #endregion
 export type B256Address = string;
 
+export type AddressB256 = string;
 export type ContractId = string;
 
 export abstract class AbstractScript<T> {
   abstract bytes: Uint8Array;
   abstract encodeScriptData: (data: T) => Uint8Array;
 }
+
+export type AddressNew = string;
 
 // #region typedoc:AbstractAddress
 export abstract class AbstractAddress {
@@ -38,7 +41,7 @@ export type ContractIdLike = AbstractAddress | AbstractContract;
 
 export abstract class AbstractPredicate {
   abstract bytes: Uint8Array;
-  abstract address: AbstractAddress;
+  abstract address: AddressNew;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   abstract types?: ReadonlyArray<any>;
 }
