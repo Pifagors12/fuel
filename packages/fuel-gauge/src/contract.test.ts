@@ -1,7 +1,6 @@
 import { generateTestWallet, seedTestWallet } from '@fuel-ts/wallet/test-utils';
 import { readFileSync } from 'fs';
 import {
-  getRandomB256,
   NativeAssetId,
   ZeroBytes32,
   bn,
@@ -14,6 +13,7 @@ import {
   FunctionInvocationResult,
   Wallet,
   ContractFactory,
+  Bech32,
 } from 'fuels';
 import type { BN, TransactionRequestLike, TransactionResponse, TransactionType } from 'fuels';
 import { join } from 'path';
@@ -104,7 +104,7 @@ describe('Contract', () => {
 
   it('assigns a provider if passed', () => {
     const provider = new Provider('http://127.0.0.1:4000/graphql');
-    const contract = new Contract(getRandomB256(), [jsonFragment], provider);
+    const contract = new Contract(Bech32.generate(), [jsonFragment], provider);
 
     expect(contract.provider).toEqual(provider);
   });
@@ -161,8 +161,8 @@ describe('Contract', () => {
     // #endregion
 
     expect(scope.transactionRequest.getContractInputs()).toEqual([
-      { contractId: contract.id.toB256(), type: 1, txPointer },
-      { contractId: otherContract.id.toB256(), type: 1, txPointer },
+      { contractId: contract.id, type: 1, txPointer },
+      { contractId: otherContract.id, type: 1, txPointer },
     ]);
 
     expect(scope.transactionRequest.getContractOutputs()).toEqual([
@@ -212,8 +212,8 @@ describe('Contract', () => {
     const scope = contract.multiCall([contract.functions.foo(1336)]).addContracts([otherContract]);
 
     expect(scope.transactionRequest.getContractInputs()).toEqual([
-      { contractId: contract.id.toB256(), type: 1, txPointer },
-      { contractId: otherContract.id.toB256(), type: 1, txPointer },
+      { contractId: contract.id, type: 1, txPointer },
+      { contractId: otherContract.id, type: 1, txPointer },
     ]);
 
     expect(scope.transactionRequest.getContractOutputs()).toEqual([
@@ -701,8 +701,8 @@ describe('Contract', () => {
   test('Read only call', async () => {
     // #region typedoc:Contract-read-only-call
     const contract = await setupContract();
-    const { value } = await contract.functions.echo_b256(contract.id.toB256()).get();
-    expect(value).toEqual(contract.id.toB256());
+    const { value } = await contract.functions.echo_b256(contract.id).get();
+    expect(value).toEqual(contract.id);
     // #endregion
   });
 });
