@@ -2,8 +2,8 @@ import type { BytesLike } from '@ethersproject/bytes';
 import type { FunctionFragment, JsonAbi, JsonFlatAbi } from '@fuel-ts/abi-coder';
 import { Interface } from '@fuel-ts/abi-coder';
 import type { Account } from '@fuel-ts/account';
-import { Address } from '@fuel-ts/address';
-import type { AbstractAddress, AbstractContract } from '@fuel-ts/interfaces';
+import { Bech32 } from '@fuel-ts/address';
+import type { AbstractAddress, AbstractContract, ContractIdLike } from '@fuel-ts/interfaces';
 import type { Provider } from '@fuel-ts/providers';
 
 import type { InvokeFunctions } from '../types';
@@ -12,7 +12,7 @@ import { FunctionInvocationScope } from './functions/invocation-scope';
 import { MultiCallInvocationScope } from './functions/multicall-scope';
 
 export default class Contract implements AbstractContract {
-  id!: AbstractAddress;
+  id!: ContractIdLike;
   provider!: Provider | null;
   interface!: Interface;
   account!: Account | null;
@@ -24,7 +24,7 @@ export default class Contract implements AbstractContract {
     accountOrProvider: Account | Provider
   ) {
     this.interface = abi instanceof Interface ? abi : new Interface(abi);
-    this.id = Address.fromAddressOrString(id);
+    this.id = Bech32.toB256FromString(id);
 
     /**
       Instead of using `instanceof` to compare classes, we instead check

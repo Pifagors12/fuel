@@ -1,4 +1,4 @@
-import { Address } from '@fuel-ts/address';
+import { Bech32 } from '@fuel-ts/address';
 import { NativeAssetId } from '@fuel-ts/constants';
 import { bn } from '@fuel-ts/math';
 import type { TransactionResultMessageOutReceipt } from '@fuel-ts/providers';
@@ -130,7 +130,7 @@ describe('Wallet', () => {
     const provider = new Provider('http://127.0.0.1:4000/graphql');
 
     const sender = await generateTestWallet(provider, [[100, NativeAssetId]]);
-    const recipient = Address.fromB256(
+    const recipient = Bech32.fromB256(
       '0x00000000000000000000000047ba61eec8e5e65247d717ff236f504cf3b0a263'
     );
     const amount = 10;
@@ -140,7 +140,7 @@ describe('Wallet', () => {
 
     const messageOutReceipt = <TransactionResultMessageOutReceipt>result.receipts[0];
     expect(result.transactionId).toEqual(messageOutReceipt.sender);
-    expect(recipient.toHexString()).toEqual(messageOutReceipt.recipient);
+    expect(Bech32.toB256FromString(recipient)).toEqual(messageOutReceipt.recipient);
     expect(amount.toString()).toEqual(messageOutReceipt.amount.toString());
 
     const senderBalances = await sender.getBalances();
@@ -162,7 +162,7 @@ describe('Wallet', () => {
     const sender = await generateTestWallet(provider, [[100, NativeAssetId]]);
     const RECIPIENT_ID = '0x00000000000000000000000047ba61eec8e5e65247d717ff236f504cf3b0a263';
     const AMOUNT = 10;
-    const recipient = Address.fromB256(RECIPIENT_ID);
+    const recipient = Bech32.fromB256(RECIPIENT_ID);
 
     const tx = await sender.withdrawToBaseLayer(recipient, AMOUNT);
     const TRANSACTION_ID = tx.id;
@@ -179,7 +179,7 @@ describe('Wallet', () => {
       expect.objectContaining({
         proofSet: expect.arrayContaining([expect.any(String)]),
         proofIndex: bn(0),
-        sender: Address.fromB256(TRANSACTION_ID),
+        sender: Bech32.fromB256(TRANSACTION_ID),
         recipient,
         nonce: expect.any(String),
         amount: bn(AMOUNT),
@@ -222,7 +222,7 @@ describe('Wallet', () => {
     await seedTestWallet(sender, [[100, NativeAssetId]]);
     await seedTestWallet(sender, [[100, NativeAssetId]]);
     await seedTestWallet(sender, [[100, NativeAssetId]]);
-    const recipient = Address.fromB256(
+    const recipient = Bech32.fromB256(
       '0x00000000000000000000000047ba61eec8e5e65247d717ff236f504cf3b0a263'
     );
     const amount = 110;
@@ -230,8 +230,9 @@ describe('Wallet', () => {
     const result = await tx.wait();
 
     const messageOutReceipt = <TransactionResultMessageOutReceipt>result.receipts[0];
+
     expect(result.transactionId).toEqual(messageOutReceipt.sender);
-    expect(recipient.toHexString()).toEqual(messageOutReceipt.recipient);
+    expect(Bech32.toB256FromString(recipient)).toEqual(messageOutReceipt.recipient);
     expect(amount.toString()).toEqual(messageOutReceipt.amount.toString());
 
     const senderBalances = await sender.getBalances();

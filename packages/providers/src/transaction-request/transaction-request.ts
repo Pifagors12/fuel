@@ -1,13 +1,14 @@
 /* eslint-disable max-classes-per-file */
 import type { BytesLike } from '@ethersproject/bytes';
 import { arrayify, hexlify } from '@ethersproject/bytes';
-import { addressify } from '@fuel-ts/address';
+import { Bech32 } from '@fuel-ts/address';
 import { NativeAssetId, ZeroBytes32 } from '@fuel-ts/constants';
 import type {
-  AddressLike,
   AbstractAddress,
   ContractIdLike,
   AbstractScript,
+  Bech32Address,
+  AddressLike,
 } from '@fuel-ts/interfaces';
 import type { BigNumberish, BN } from '@fuel-ts/math';
 import { bn } from '@fuel-ts/math';
@@ -22,7 +23,6 @@ import {
 
 import type { CoinQuantity, CoinQuantityLike } from '../coin-quantity';
 import { coinQuantityfy } from '../coin-quantity';
-import type { Message } from '../message';
 import type { Resource } from '../resource';
 import { isCoin } from '../resource';
 import { calculatePriceWithFactor, normalizeJSON } from '../utils';
@@ -233,16 +233,15 @@ abstract class BaseTransactionRequest implements BaseTransactionRequestLike {
   /**
    * Returns the witnessIndex of the found CoinInput
    */
-  getCoinInputWitnessIndexByOwner(owner: AddressLike): number | null {
-    const ownerAddress = addressify(owner);
+  getCoinInputWitnessIndexByOwner(owner: AbstractAddress): number | null {
     return (
       this.inputs.find(
         (input): input is CoinTransactionRequestInput =>
-          input.type === InputType.Coin && hexlify(input.owner) === ownerAddress.toB256()
+          input.type === InputType.Coin && Bech32.equals(input.owner, owner)
       )?.witnessIndex ??
       this.inputs.find(
         (input): input is MessageTransactionRequestInput =>
-          input.type === InputType.Message && hexlify(input.recipient) === ownerAddress.toB256()
+          input.type === InputType.Message && Bech32.equals(input.recipient, owner)
       )?.witnessIndex ??
       null
     );
@@ -251,11 +250,11 @@ abstract class BaseTransactionRequest implements BaseTransactionRequestLike {
   /**
    * Updates the witness for the given CoinInput owner
    */
-  updateWitnessByCoinInputOwner(owner: AddressLike, witness: BytesLike) {
+  updateWitnessByCoinInputOwner(owner: Bech32Address, witness: BytesLike) {
     const witnessIndex = this.getCoinInputWitnessIndexByOwner(owner);
 
     if (!witnessIndex) {
-      throw new NoWitnessByOwnerError(addressify(owner));
+      throw new NoWitnessByOwnerError(Bech32.fromString(owner));
     }
 
     this.updateWitness(witnessIndex, witness);
@@ -281,15 +280,15 @@ abstract class BaseTransactionRequest implements BaseTransactionRequestLike {
         ? ({
             type,
             ...resource,
-            owner: resource.owner.toB256(),
+            owner: Bech32.toB256FromString(resource.owner),
             witnessIndex,
             txPointer: '0x00000000000000000000000000000000',
           } as CoinTransactionRequestInput)
         : ({
             type,
             ...resource,
-            sender: resource.sender.toB256(),
-            recipient: resource.recipient.toB256(),
+            sender: Bech32.toB256FromString(resource.sender),
+            recipient: Bech32.toB256FromString(resource.recipient),
             witnessIndex,
             txPointer: '0x00000000000000000000000000000000',
           } as MessageTransactionRequestInput)
@@ -301,7 +300,7 @@ abstract class BaseTransactionRequest implements BaseTransactionRequestLike {
     );
 
     // Throw if the existing ChangeOutput is not for the same owner
-    if (changeOutput && hexlify(changeOutput.to) !== ownerAddress.toB256()) {
+    if (changeOutput && !Bech32.equals(changeOutput.to, ownerAddress)) {
       throw new ChangeOutputCollisionError();
     }
 
@@ -309,7 +308,7 @@ abstract class BaseTransactionRequest implements BaseTransactionRequestLike {
     if (!changeOutput) {
       this.pushOutput({
         type: OutputType.Change,
-        to: ownerAddress.toB256(),
+        to: Bech32.toB256FromString(ownerAddress),
         assetId,
       });
     }
@@ -321,7 +320,7 @@ abstract class BaseTransactionRequest implements BaseTransactionRequestLike {
 
   addCoinOutput(
     /** Address of the destination */
-    to: AddressLike,
+    to: AbstractAddress,
     /** Amount of coins */
     amount: BigNumberish,
     /** Asset ID of coins */
@@ -329,7 +328,7 @@ abstract class BaseTransactionRequest implements BaseTransactionRequestLike {
   ) {
     this.pushOutput({
       type: OutputType.Coin,
-      to: addressify(to).toB256(),
+      to: Bech32.toB256FromString(to),
       amount,
       assetId,
     });
@@ -337,14 +336,14 @@ abstract class BaseTransactionRequest implements BaseTransactionRequestLike {
 
   addCoinOutputs(
     /** Address of the destination */
-    to: AddressLike,
+    to: AbstractAddress,
     /** Quantities of coins */
     quantities: CoinQuantityLike[]
   ) {
     quantities.map(coinQuantityfy).forEach((quantity) => {
       this.pushOutput({
         type: OutputType.Coin,
-        to: addressify(to).toB256(),
+        to: Bech32.toB256FromString(to),
         amount: quantity.amount,
         assetId: quantity.assetId,
       });
@@ -480,16 +479,16 @@ export class ScriptTransactionRequest extends BaseTransactionRequest {
   }
 
   addContract(contract: ContractIdLike) {
-    const contractAddress = addressify(contract);
+    const contractAddress = Bech32.toB256FromString(contract);
 
     // Add only one input contract per contractId
-    if (this.getContractInputs().find((i) => i.contractId === contractAddress.toB256())) {
+    if (this.getContractInputs().find((i) => Bech32.equals(i.contractId, contractAddress))) {
       return;
     }
 
     const inputIndex = super.pushInput({
       type: InputType.Contract,
-      contractId: contractAddress.toB256(),
+      contractId: contractAddress,
       txPointer: '0x00000000000000000000000000000000',
     });
 

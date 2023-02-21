@@ -1,4 +1,5 @@
-import type { AbstractAddress } from '@fuel-ts/interfaces';
+import { Bech32 } from '@fuel-ts/address';
+import type { Bech32Address } from '@fuel-ts/interfaces';
 import type { WalletUnlocked } from '@fuel-ts/wallet';
 import { Wallet } from '@fuel-ts/wallet';
 
@@ -52,9 +53,9 @@ export class PrivateKeyVault implements Vault<PkVaultOptions> {
     return this.getPublicAccount(wallet.privateKey);
   }
 
-  exportAccount(address: AbstractAddress): string {
+  exportAccount(address: Bech32Address): string {
     const privateKey = this.#privateKeys.find((pk) =>
-      Wallet.fromPrivateKey(pk).address.equals(address)
+      Bech32.equals(Wallet.fromPrivateKey(pk).address, address)
     );
 
     if (!privateKey) {
@@ -64,7 +65,7 @@ export class PrivateKeyVault implements Vault<PkVaultOptions> {
     return privateKey;
   }
 
-  getWallet(address: AbstractAddress): WalletUnlocked {
+  getWallet(address: Bech32Address): WalletUnlocked {
     const privateKey = this.exportAccount(address);
     return Wallet.fromPrivateKey(privateKey);
   }

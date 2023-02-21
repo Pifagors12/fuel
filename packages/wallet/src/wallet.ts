@@ -7,7 +7,7 @@ import { WalletLocked, WalletUnlocked } from './wallets';
 
 export class Wallet {
   static fromAddress(
-    address: string | AbstractAddress,
+    address: AbstractAddress,
     provider: string | Provider = FUEL_NETWORK_URL
   ): WalletLocked {
     return new WalletLocked(address, provider);

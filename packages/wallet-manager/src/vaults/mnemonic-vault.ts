@@ -1,3 +1,4 @@
+import { Bech32 } from '@fuel-ts/address';
 import type { AbstractAddress } from '@fuel-ts/interfaces';
 import { Mnemonic } from '@fuel-ts/mnemonic';
 import type { WalletUnlocked } from '@fuel-ts/wallet';
@@ -74,7 +75,7 @@ export class MnemonicVault implements Vault<MnemonicVaultOptions> {
     // Look for the account that has the same address
     do {
       const wallet = Wallet.fromMnemonic(this.#secret, this.getDerivePath(numberOfAccounts));
-      if (wallet.address.equals(address)) {
+      if (Bech32.equals(wallet.address, address)) {
         return wallet.privateKey;
       }
       numberOfAccounts += 1;

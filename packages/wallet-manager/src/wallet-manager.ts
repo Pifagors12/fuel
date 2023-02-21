@@ -1,3 +1,4 @@
+import { Bech32 } from '@fuel-ts/address';
 import type { AbstractAddress } from '@fuel-ts/interfaces';
 import type { Keystore } from '@fuel-ts/keystore';
 import { encrypt, decrypt } from '@fuel-ts/keystore';
@@ -111,7 +112,7 @@ export class WalletManager extends EventEmitter {
    */
   getWallet(address: AbstractAddress): WalletUnlocked {
     const vaultState = this.#vaults.find((vs) =>
-      vs.vault.getAccounts().find((a) => a.address.equals(address))
+      vs.vault.getAccounts().find((a) => Bech32.equals(a.address, address))
     );
     assert(vaultState, ERROR_MESSAGES.address_not_found);
 
@@ -124,7 +125,7 @@ export class WalletManager extends EventEmitter {
   exportPrivateKey(address: AbstractAddress) {
     assert(!this.#isLocked, ERROR_MESSAGES.wallet_not_unlocked);
     const vaultState = this.#vaults.find((vs) =>
-      vs.vault.getAccounts().find((a) => a.address.equals(address))
+      vs.vault.getAccounts().find((a) => Bech32.equals(a.address, address))
     );
     assert(vaultState, ERROR_MESSAGES.address_not_found);
 

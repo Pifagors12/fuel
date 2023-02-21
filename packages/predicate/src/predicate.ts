@@ -1,10 +1,10 @@
 import type { BytesLike } from '@ethersproject/bytes';
-import { hexlify, arrayify } from '@ethersproject/bytes';
+import { arrayify } from '@ethersproject/bytes';
 import { Logger } from '@ethersproject/logger';
 import { AbiCoder, Interface } from '@fuel-ts/abi-coder';
 import type { JsonAbiFragmentType, JsonAbi, InputValue } from '@fuel-ts/abi-coder';
 import { Account } from '@fuel-ts/account';
-import { Address } from '@fuel-ts/address';
+import { Bech32 } from '@fuel-ts/address';
 import type {
   CallResult,
   Provider,
@@ -26,8 +26,7 @@ export class Predicate<ARGS extends InputValue[]> extends Account {
   interface?: Interface;
 
   constructor(bytes: BytesLike, types?: JsonAbi, provider?: string | Provider) {
-    const address = Address.fromB256(getContractRoot(bytes));
-    super(address, provider);
+    super(getContractRoot(bytes), provider);
 
     // Assign bytes data
     this.bytes = arrayify(bytes);
@@ -51,7 +50,7 @@ export class Predicate<ARGS extends InputValue[]> extends Account {
     const request = transactionRequestify(transactionRequestLike);
 
     request.inputs?.forEach((input) => {
-      if (input.type === InputType.Coin && hexlify(input.owner) === this.address.toB256()) {
+      if (input.type === InputType.Coin && Bech32.equals(input.owner, this.address)) {
         // eslint-disable-next-line no-param-reassign
         input.predicate = this.bytes;
         // eslint-disable-next-line no-param-reassign

@@ -10,15 +10,7 @@ export abstract class AbstractScript<T> {
 }
 
 // #region typedoc:AbstractAddress
-export abstract class AbstractAddress {
-  abstract toJSON(): string;
-  abstract toString(): string;
-  abstract toAddress(): Bech32Address;
-  abstract toB256(): B256Address;
-  abstract toHexString(): string;
-  abstract toBytes(): Uint8Array;
-  abstract equals(other: AbstractAddress): boolean;
-}
+export type AbstractAddress = Bech32Address | B256Address | string;
 // #endregion
 
 export abstract class AbstractContract {
@@ -31,7 +23,7 @@ export abstract class AbstractAccount {
 
 export type AddressLike = AbstractAddress | AbstractAccount;
 
-export type ContractIdLike = AbstractAddress | AbstractContract;
+export type ContractIdLike = string;
 
 export abstract class AbstractPredicate {
   abstract bytes: Uint8Array;
