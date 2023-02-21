@@ -2,7 +2,7 @@ import type { BytesLike } from '@ethersproject/bytes';
 import { concat, hexlify, arrayify } from '@ethersproject/bytes';
 import { Bech32 } from '@fuel-ts/address';
 import { hash } from '@fuel-ts/hasher';
-import type { AbstractAddress, Bech32Address } from '@fuel-ts/interfaces';
+import type { AccountAddress } from '@fuel-ts/interfaces';
 import { randomBytes } from '@fuel-ts/keystore';
 import { toBytes } from '@fuel-ts/math';
 import { ec as EC } from 'elliptic';
@@ -15,7 +15,7 @@ export function getCurve() {
 }
 
 class Signer {
-  readonly address: AbstractAddress;
+  readonly address: AccountAddress;
 
   readonly publicKey: string;
 
@@ -117,7 +117,7 @@ class Signer {
    * @param signature - Signature
    * @returns Address from signature
    */
-  static recoverAddress(data: BytesLike, signature: BytesLike): Bech32Address {
+  static recoverAddress(data: BytesLike, signature: BytesLike): AccountAddress {
     return Bech32.fromPublicKey(Signer.recoverPublicKey(data, signature));
   }
 

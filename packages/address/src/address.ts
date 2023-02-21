@@ -1,7 +1,7 @@
 import type { BytesLike } from '@ethersproject/bytes';
 import { isHexString, isBytes, arrayify, hexlify } from '@ethersproject/bytes';
 import { sha256 } from '@ethersproject/sha2';
-import type { Bech32Address } from '@fuel-ts/interfaces';
+import type { AccountAddress } from '@fuel-ts/interfaces';
 import { randomBytes } from '@fuel-ts/keystore';
 import { bech32m } from 'bech32';
 
@@ -39,14 +39,14 @@ export class Bech32 {
     }
   }
 
-  static fromB256(address: BytesLike): Bech32Address {
+  static fromB256(address: BytesLike): AccountAddress {
     if (!Bech32.isB256(address)) {
       throw new Error('Invalid B256 address');
     }
     return bech32m.encode(
       FUEL_BECH32_HRP_PREFIX,
       bech32m.toWords(arrayify(address))
-    ) as Bech32Address;
+    ) as AccountAddress;
   }
 
   static toB256(address: BytesLike): string {
@@ -58,14 +58,14 @@ export class Bech32 {
     return hexlify(bytes);
   }
 
-  static fromPublicKey(address: BytesLike): Bech32Address {
+  static fromPublicKey(address: BytesLike): AccountAddress {
     if (!Bech32.isPublicKey(address)) {
       throw new Error('Invalid Public Key');
     }
     return Bech32.fromB256(sha256(address));
   }
 
-  static fromString(address: BytesLike): Bech32Address {
+  static fromString(address: BytesLike): AccountAddress {
     if (Bech32.isPublicKey(address)) {
       return Bech32.fromPublicKey(address);
     }
@@ -73,7 +73,7 @@ export class Bech32 {
       return Bech32.fromB256(address);
     }
     if (Bech32.isBech32(address)) {
-      return toText(address) as Bech32Address;
+      return toText(address) as AccountAddress;
     }
     throw new Error('Unknown address format: only Bech32, B256, or Public Key (512) supported');
   }
@@ -89,5 +89,11 @@ export class Bech32 {
 
   static generate() {
     return Bech32.fromB256(randomBytes(32));
+  }
+
+  static assert(address: BytesLike) {
+    if (!Bech32.isBech32(address)) {
+      throw new Error('Invalid Bech32 address');
+    }
   }
 }

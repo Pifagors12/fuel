@@ -2,8 +2,7 @@ import type { BytesLike } from '@ethersproject/bytes';
 import { arrayify, hexlify } from '@ethersproject/bytes';
 import { Bech32 } from '@fuel-ts/address';
 import { NativeAssetId } from '@fuel-ts/constants';
-import { AbstractAccount } from '@fuel-ts/interfaces';
-import type { AbstractAddress, Bech32Address } from '@fuel-ts/interfaces';
+import type { AccountAddress } from '@fuel-ts/interfaces';
 import type { BigNumberish, BN } from '@fuel-ts/math';
 import { bn } from '@fuel-ts/math';
 import type {
@@ -31,13 +30,12 @@ import { FUEL_NETWORK_URL } from './constants';
 /**
  * Account
  */
-export class Account extends AbstractAccount {
-  readonly address: Bech32Address;
+export class Account {
+  readonly address: AccountAddress;
 
   provider: Provider;
 
-  constructor(address: string, provider: string | Provider = FUEL_NETWORK_URL) {
-    super();
+  constructor(address: BytesLike, provider: string | Provider = FUEL_NETWORK_URL) {
     this.provider = this.connect(provider);
     this.address = Bech32.fromString(address);
   }
@@ -180,7 +178,7 @@ export class Account extends AbstractAccount {
    */
   async transfer(
     /** Address of the destination */
-    destination: AbstractAddress,
+    destination: AccountAddress,
     /** Amount of coins */
     amount: BigNumberish,
     /** Asset ID of coins */
@@ -212,7 +210,7 @@ export class Account extends AbstractAccount {
    */
   async withdrawToBaseLayer(
     /** Address of the recipient on the base chain */
-    recipient: Bech32Address,
+    recipient: AccountAddress,
     /** Amount of base asset */
     amount: BigNumberish,
     /** Tx Params */

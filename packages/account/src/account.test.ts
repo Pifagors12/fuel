@@ -1,3 +1,4 @@
+import { Bech32 } from '@fuel-ts/address';
 import { bn } from '@fuel-ts/math';
 
 import { Account } from './account';
@@ -13,7 +14,7 @@ describe('Account', () => {
     const account = new Account(
       '0x09c0b2d1a486c439a87bcba6b46a7a1a23f3897cc83a94521a96da5c23bc58db'
     );
-    expect(account.address.toB256()).toEqual(
+    expect(Bech32.toB256(account.address)).toEqual(
       '0x09c0b2d1a486c439a87bcba6b46a7a1a23f3897cc83a94521a96da5c23bc58db'
     );
   });

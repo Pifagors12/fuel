@@ -1,5 +1,5 @@
 import { Bech32 } from '@fuel-ts/address';
-import type { AbstractAddress } from '@fuel-ts/interfaces';
+import type { AccountAddress } from '@fuel-ts/interfaces';
 import type { Keystore } from '@fuel-ts/keystore';
 import { encrypt, decrypt } from '@fuel-ts/keystore';
 import type { WalletUnlocked } from '@fuel-ts/wallet';
@@ -110,7 +110,7 @@ export class WalletManager extends EventEmitter {
   /**
    * Create a Wallet instance for the specific account
    */
-  getWallet(address: AbstractAddress): WalletUnlocked {
+  getWallet(address: AccountAddress): WalletUnlocked {
     const vaultState = this.#vaults.find((vs) =>
       vs.vault.getAccounts().find((a) => Bech32.equals(a.address, address))
     );
@@ -122,7 +122,7 @@ export class WalletManager extends EventEmitter {
   /**
    * Export specific account privateKey
    */
-  exportPrivateKey(address: AbstractAddress) {
+  exportPrivateKey(address: AccountAddress) {
     assert(!this.#isLocked, ERROR_MESSAGES.wallet_not_unlocked);
     const vaultState = this.#vaults.find((vs) =>
       vs.vault.getAccounts().find((a) => Bech32.equals(a.address, address))

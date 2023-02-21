@@ -3,7 +3,7 @@ import type { FunctionFragment, JsonAbi, JsonFlatAbi } from '@fuel-ts/abi-coder'
 import { Interface } from '@fuel-ts/abi-coder';
 import type { Account } from '@fuel-ts/account';
 import { Bech32 } from '@fuel-ts/address';
-import type { AbstractAddress, AbstractContract, ContractIdLike } from '@fuel-ts/interfaces';
+import type { ContractAddress } from '@fuel-ts/interfaces';
 import type { Provider } from '@fuel-ts/providers';
 
 import type { InvokeFunctions } from '../types';
@@ -11,15 +11,15 @@ import type { InvokeFunctions } from '../types';
 import { FunctionInvocationScope } from './functions/invocation-scope';
 import { MultiCallInvocationScope } from './functions/multicall-scope';
 
-export default class Contract implements AbstractContract {
-  id!: ContractIdLike;
+export default class Contract {
+  id!: ContractAddress;
   provider!: Provider | null;
   interface!: Interface;
   account!: Account | null;
   functions: InvokeFunctions = {};
 
   constructor(
-    id: string | AbstractAddress,
+    id: ContractAddress,
     abi: JsonAbi | JsonFlatAbi | Interface,
     accountOrProvider: Account | Provider
   ) {
