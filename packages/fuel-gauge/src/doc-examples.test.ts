@@ -22,6 +22,7 @@ import {
 } from 'fuels';
 import { join } from 'path';
 
+import b512testABi from '../test-projects/b512-test/out/debug/b512-test-abi.json';
 import abiJSON from '../test-projects/call-test-contract/out/debug/call-test-abi.json';
 import liquidityPoolABI from '../test-projects/liquidity-pool/out/debug/liquidity-pool-abi.json';
 import predicateTriple from '../test-projects/predicate-triple-sig';
@@ -548,4 +549,24 @@ test('deposit and withdraw cookbook guide', async () => {
   // verify balances again
   expect(await wallet.getBalance(tokenContractID.toB256())).toEqual(bn(200));
   expect(await wallet.getBalance(liquidityPoolContractID.toB256())).toEqual(bn(0));
+});
+
+test.only('b512 test', async () => {
+  const provider = new Provider('http://127.0.0.1:4000/graphql');
+  const PRIVATE_KEY = '0x862512a2363db2b3a375c0d4bbbd27172180d89f23f2e259bac850ab02619301';
+  const wallet = Wallet.fromPrivateKey(PRIVATE_KEY, provider);
+  await seedTestWallet(wallet, [{ assetId: NativeAssetId, amount: bn(100_000) }]);
+
+  const contractBytecode = readFileSync(
+    join(__dirname, '../test-projects/b512-test/out/debug/b512-test.bin')
+  );
+  const contractFactory = new ContractFactory(contractBytecode, b512testABi, wallet);
+  const contract = await contractFactory.deployContract();
+
+  const dataToSign = '0x0000000000000000000000000000000000000000000000000000000000000000';
+  console.log('wallet pub key', wallet.address.toB256());
+  const signature = await wallet.signMessage(dataToSign);
+
+  const { logs, value } = await contract.functions.test_function(signature).call();
+  console.log(logs, value);
 });
