@@ -18,15 +18,16 @@ module.exports = function (config) {
     // available preprocessors: https://npmjs.org/browse/keyword/karma-preprocessor
     preprocessors: {
       // Use webpack to bundle our tests files
-      'packages/**/*.test.ts': ['karma-typescript'],
+      'packages/**.ts': ['karma-typescript'],
     },
     browsers: ['ChromeHeadless'],
     karmaTypescriptConfig: {
-      bundlerOptions: {
-        // eslint-disable-next-line global-require, @typescript-eslint/no-var-requires
-        transforms: [require('karma-typescript-es6-transform')()],
-      },
-      tsconfig: './tsconfig.json',
+      // bundlerOptions: {
+      //   // eslint-disable-next-line global-require, @typescript-eslint/no-var-requires
+      //   transforms: [require('karma-typescript-es6-transform')()],
+      // },
+      tsconfig: './karma-tsconfig.json',
     },
+    logLevel: config.LOG_DEBUG,
   });
 };
