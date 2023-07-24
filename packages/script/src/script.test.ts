@@ -131,6 +131,7 @@ describe('Script', () => {
 
     const newScript = new Script(scriptBin, jsonAbiFragmentMock, wallet);
 
+    newScript.setConfigurableConstants('U18');
     const { error } = await safeExec(() => newScript.setConfigurableConstants({ FEE: 8 }));
 
     expect((<Error>error).message).toMatch(/Script has no configurable constants to be set/);
@@ -152,10 +153,14 @@ describe('Script', () => {
           offset: 44,
         },
       ],
-    };
+    } as const;
 
+    const inter = new Interface(jsonAbiWithConfigurablesMock);
+
+    const ggg = inter.configurables.WE;
     const script = new Script(scriptBin, jsonAbiWithConfigurablesMock, wallet);
 
+    script.setConfigurableConstants('Fqwe');
     const { error } = await safeExec(() => script.setConfigurableConstants({ NOT_DEFINED: 8 }));
 
     expect((<Error>error).message).toMatch(

@@ -1,4 +1,10 @@
-import type { JsonAbi, JsonAbiArgument, JsonAbiFunction, JsonAbiType } from '../json-abi';
+import type {
+  JsonAbi,
+  JsonAbiArgument,
+  JsonAbiConfigurable,
+  JsonAbiFunction,
+  JsonAbiType,
+} from '../json-abi';
 
 import type { Filter, Flatten, IndexOf, ReplaceValues, TupleToUnion } from './type-utilities';
 
@@ -10,6 +16,17 @@ export type InferAbiFunctions<
 > = {
   readonly [Name in Fn['name']]: Fn extends { readonly name: Name }
     ? InferAbiFunction<Fn, Types>
+    : never;
+};
+
+export type InferAbiConfigurables<
+  TAbi extends JsonAbi,
+  Configurables extends JsonAbi['configurables'] = TAbi['configurables'],
+  Types extends TAbi['types'] = TAbi['types'],
+  C extends JsonAbiConfigurable = TupleToUnion<Configurables>
+> = {
+  readonly [Name in C['name']]: C extends { readonly name: Name }
+    ? InferAbiType<Types, C['configurableType']>
     : never;
 };
 

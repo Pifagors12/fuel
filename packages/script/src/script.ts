@@ -20,15 +20,19 @@ type InvokeMain<TArgs extends Array<any> = Array<any>, TReturn = any> = (
   ...args: TArgs
 ) => ScriptInvocationScope<TArgs, TReturn>;
 
-export class Script<TInput extends Array<any>, TOutput> extends AbstractScript {
+export class Script<
+  TInput extends Array<any>,
+  TOutput,
+  const TAbi extends JsonAbi = JsonAbi
+> extends AbstractScript {
   bytes: Uint8Array;
-  interface: Interface;
+  interface: Interface<TAbi>;
   account: Account;
   script!: ScriptRequest<InputValue<void>[], Result<TOutput>>;
   provider: Provider;
   functions: { main: InvokeMain<TInput, TOutput> };
 
-  constructor(bytecode: BytesLike, abi: JsonAbi, account: Account) {
+  constructor(bytecode: BytesLike, abi: TAbi, account: Account) {
     super();
     this.bytes = arrayify(bytecode);
     this.interface = new Interface(abi);
@@ -42,7 +46,9 @@ export class Script<TInput extends Array<any>, TOutput> extends AbstractScript {
     };
   }
 
-  setConfigurableConstants(configurables: { [name: string]: unknown }) {
+  setConfigurableConstants<CName extends Parameters<typeof this.interface.encodeConfigurable>[0]>(
+    configurables: CName
+  ) {
     try {
       if (!Object.keys(this.interface.configurables).length) {
         throw new Error('Script has no configurable constants to be set');
@@ -55,7 +61,7 @@ export class Script<TInput extends Array<any>, TOutput> extends AbstractScript {
 
         const { offset } = this.interface.configurables[key];
 
-        const encoded = this.interface.encodeConfigurable(key, value as InputValue);
+        const encoded = this.interface.encodeConfigurable(key, value);
 
         this.bytes.set(encoded, offset);
       });

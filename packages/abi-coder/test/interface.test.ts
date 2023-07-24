@@ -137,6 +137,7 @@ describe('Abi interface', () => {
     });
 
     it('throws when encoding non-existent configurable', () => {
+      // @ts-expect-error this is a configurable key that doesn't exist on the abi
       expect(() => exhaustiveExamplesInterface.encodeConfigurable('futile_effort', 3)).toThrow(
         "configurable 'futile_effort' doesn't exist"
       );

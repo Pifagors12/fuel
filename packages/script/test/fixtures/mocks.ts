@@ -52,7 +52,7 @@ export const jsonAbiFragmentMock: JsonAbi = {
       attributes: [],
     },
   ],
-};
+} as const;
 
 export const jsonAbiMock: JsonAbi = {
   types: [
@@ -89,4 +89,4 @@ export const jsonAbiMock: JsonAbi = {
   ],
   loggedTypes: [],
   configurables: [],
-};
+} as const;

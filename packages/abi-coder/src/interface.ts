@@ -8,14 +8,15 @@ import { AbiCoder } from './abi-coder';
 import type { InputValue } from './coders/abstract-coder';
 import { FunctionFragment } from './function-fragment';
 import type { JsonAbi, JsonAbiConfigurable } from './json-abi';
-import type { InferAbiFunctions } from './type-inferrer/abi-type-inferrer';
+import type { InferAbiConfigurables, InferAbiFunctions } from './type-inferrer/abi-type-inferrer';
 import { findOrThrow } from './utilities';
 
 const logger = new Logger(versions.FUELS);
 
 export class Interface<
   const TAbi extends JsonAbi = JsonAbi,
-  InferredFns extends Record<string, { input: object; output: unknown }> = InferAbiFunctions<TAbi>
+  InferredFns extends Record<string, { input: object; output: unknown }> = InferAbiFunctions<TAbi>,
+  InferredConfigurables extends Record<string, unknown> = InferAbiConfigurables<TAbi>
 > {
   readonly functions: {
     [FnName in keyof InferredFns]: FunctionFragment<
@@ -24,7 +25,10 @@ export class Interface<
     >;
   };
 
-  readonly configurables: Record<string, JsonAbiConfigurable>;
+  readonly configurables: {
+    [CName in keyof InferredConfigurables]: JsonAbiConfigurable;
+  };
+
   /*
     TODO: Refactor so that there's no need for externalLoggedTypes
      
@@ -45,6 +49,7 @@ export class Interface<
       jsonAbi.functions.map((x) => [x.name, new FunctionFragment(this.jsonAbi, x.name)])
     );
 
+    // @ts-expect-error it expects the generic type to be satisfied but it's clear what's going on
     this.configurables = Object.fromEntries(jsonAbi.configurables.map((x) => [x.name, x]));
   }
 
@@ -133,7 +138,10 @@ export class Interface<
     this.externalLoggedTypes[id] = loggedTypes;
   }
 
-  encodeConfigurable(name: string, value: InputValue) {
+  encodeConfigurable<Name extends keyof InferredConfigurables & string>(
+    name: Name,
+    value: InferredConfigurables[Name]
+  ) {
     const configurable = findOrThrow(
       this.jsonAbi.configurables,
       (c) => c.name === name,
@@ -142,6 +150,7 @@ export class Interface<
       }
     );
 
+    // @ts-expect-error valasdfkjer
     return AbiCoder.encode(this.jsonAbi, configurable.configurableType, value);
   }
 }

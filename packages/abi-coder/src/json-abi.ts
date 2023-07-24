@@ -40,7 +40,7 @@ export interface JsonAbiFunctionAttribute {
 }
 
 export interface JsonAbiConfigurable {
-  name: string;
-  configurableType: JsonAbiArgument;
-  offset: number;
+  readonly name: string;
+  readonly configurableType: JsonAbiArgument;
+  readonly offset: number;
 }
