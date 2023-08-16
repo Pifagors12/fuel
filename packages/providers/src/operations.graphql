@@ -368,3 +368,9 @@ mutation execute($sessionId: ID!, $op: String!) {
 mutation reset($sessionId: ID!) {
   reset(id: $sessionId)
 }
+
+subscription statusChange($id: TransactionId!) {
+  statusChange(id: $id) {
+    __typename
+  }
+}

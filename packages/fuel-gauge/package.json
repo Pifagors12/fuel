@@ -11,10 +11,12 @@
   },
   "license": "Apache-2.0",
   "dependencies": {
-    "fuels": "workspace:*"
+    "fuels": "workspace:*",
+    "graphql-sse": "^2.1.1"
   },
   "devDependencies": {
     "@fuel-ts/wallet": "workspace:*",
-    "forc-bin": "workspace:*"
+    "forc-bin": "workspace:*",
+    "rxjs": "^7.8.0"
   }
 }
