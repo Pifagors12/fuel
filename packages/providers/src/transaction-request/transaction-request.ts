@@ -459,6 +459,33 @@ export abstract class BaseTransactionRequest implements BaseTransactionRequestLi
   }
 
   /**
+   * Gets required coins amount for transaction request.
+   *
+   * @param transactionFee - Transaction fee.
+   */
+  getRequiredCoins(transactionFee: BigNumberish): CoinQuantityLike[] {
+    const fee = bn(transactionFee).toNumber() ? transactionFee : bn(1);
+
+    const coinOutputs = this.getCoinOutputs();
+
+    const coinAmounts = coinOutputs.map((output) => ({
+      amount: output.assetId === BaseAssetId ? bn(output.amount).add(fee) : output.amount,
+      assetId: output.assetId,
+    }));
+
+    const hasBaseAsset = coinAmounts.find((coin) => coin.assetId === BaseAssetId);
+
+    if (!hasBaseAsset) {
+      coinAmounts.push({
+        amount: fee,
+        assetId: BaseAssetId,
+      });
+    }
+
+    return coinAmounts;
+  }
+
+  /**
    * @hidden
    */
   byteSize() {
