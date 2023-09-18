@@ -215,8 +215,11 @@ export class Account extends AbstractAccount {
    * @returns A promise that resolves when the resources are added to the transaction.
    */
   async fund<T extends TransactionRequest>(request: T): Promise<void> {
-    const fee = request.calculateFee();
-    const resources = await this.getResourcesToSpend([fee]);
+    const { minGasPrice } = await this.provider.getNodeInfo();
+
+    const amounts = request.getRequiredCoins(minGasPrice);
+
+    const resources = await this.getResourcesToSpend(amounts);
 
     request.addResources(resources);
   }
