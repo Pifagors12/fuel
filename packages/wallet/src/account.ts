@@ -247,18 +247,7 @@ export class Account extends AbstractAccount {
 
     const request = new ScriptTransactionRequest(params);
     request.addCoinOutput(destination, amount, assetId);
-    const fee = request.calculateFee();
-    let quantities: CoinQuantityLike[] = [];
-
-    if (fee.assetId === hexlify(assetId)) {
-      fee.amount = fee.amount.add(amount);
-      quantities = [fee];
-    } else {
-      quantities = [[amount, assetId], fee];
-    }
-
-    const resources = await this.getResourcesToSpend(quantities);
-    request.addResources(resources);
+    await this.fund(request);
 
     return this.sendTransaction(request);
   }
