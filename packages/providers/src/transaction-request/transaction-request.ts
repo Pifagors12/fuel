@@ -9,7 +9,7 @@ import type { TransactionCreate, TransactionScript } from '@fuel-ts/transactions
 import { TransactionType, TransactionCoder, InputType, OutputType } from '@fuel-ts/transactions';
 
 import type { Coin } from '../coin';
-import type { CoinQuantity, CoinQuantityLike } from '../coin-quantity';
+import type { CoinQuantity, CoinQuantityLike, CoinQuantityLikeObject } from '../coin-quantity';
 import { coinQuantityfy } from '../coin-quantity';
 import type { MessageCoin } from '../message';
 import type { Resource } from '../resource';
@@ -462,7 +462,7 @@ export abstract class BaseTransactionRequest implements BaseTransactionRequestLi
    *
    * @param transactionFee - Transaction fee.
    */
-  getRequiredCoins(fee: BN): CoinQuantityLike[] {
+  getRequiredCoins(fee: BN): CoinQuantityLikeObject[] {
     let isFeeAmountAdded = false;
     const coinOutputs = this.getCoinOutputs();
 
@@ -475,7 +475,7 @@ export abstract class BaseTransactionRequest implements BaseTransactionRequestLi
       };
 
       if (assetId === BaseAssetId) {
-        coinAmount.amount.add(fee);
+        coinAmount.amount = coinAmount.amount.add(fee);
         isFeeAmountAdded = true;
       }
 
