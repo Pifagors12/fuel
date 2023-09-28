@@ -4,9 +4,13 @@ import { BaseAssetId } from '@fuel-ts/address/configs';
 import type { BigNumberish, BN } from '@fuel-ts/math';
 import { bn } from '@fuel-ts/math';
 
-export type CoinQuantityLike =
-  | [amount: BigNumberish, assetId?: BytesLike, max?: BigNumberish]
-  | { amount: BigNumberish; assetId?: BytesLike; max?: BigNumberish };
+export type CoinQuantityLikeTuple = [amount: BigNumberish, assetId?: BytesLike, max?: BigNumberish];
+export type CoinQuantityLikeObject = {
+  amount: BigNumberish;
+  assetId?: BytesLike;
+  max?: BigNumberish;
+};
+export type CoinQuantityLike = CoinQuantityLikeTuple | CoinQuantityLikeObject;
 export type CoinQuantity = { amount: BN; assetId: string; max?: BN };
 
 /** @hidden */
