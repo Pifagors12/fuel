@@ -1,5 +1,6 @@
 import { Address } from '@fuel-ts/address';
 import { BaseAssetId } from '@fuel-ts/address/configs';
+import type { BN } from '@fuel-ts/math';
 import { bn } from '@fuel-ts/math';
 import type {
   CallResult,
@@ -7,12 +8,11 @@ import type {
   CoinQuantity,
   Message,
   Resource,
-  ScriptTransactionRequest,
   TransactionRequest,
   TransactionRequestLike,
   TransactionResponse,
 } from '@fuel-ts/providers';
-import { Provider } from '@fuel-ts/providers';
+import { ScriptTransactionRequest, Provider } from '@fuel-ts/providers';
 import * as providersMod from '@fuel-ts/providers';
 
 import { Account } from './account';
@@ -36,8 +36,8 @@ describe('Account', () => {
     provider = await Provider.create(FUEL_NETWORK_URL);
 
     testWallet = await generateTestWallet(provider, [
-      [500, BaseAssetId],
-      [500, assetIdA],
+      [5_000, BaseAssetId],
+      [5_000, assetIdA],
     ]);
   });
   const assets = [
@@ -214,16 +214,66 @@ describe('Account', () => {
     expect(account.provider).not.toBe(provider);
   });
 
-  it('should execute fund just as fine', async () => {
-    const amount = 1;
-    const assetId = assetIdA;
+  it('should fund transaction request just fine [BASE ASSET]', async () => {
+    const amountToTransfer = bn(1000);
+    const destination = Wallet.generate({ provider });
 
-    const originalBalance = await testWallet.getBalance(assetId);
+    const transactionRequest = new ScriptTransactionRequest({
+      gasLimit: 10000,
+      gasPrice: 1,
+    });
 
-    await testWallet.fund(amount, assetIdA);
+    transactionRequest.addCoinOutput(destination.address, amountToTransfer);
 
-    const finalBalance = await testWallet.getBalance(assetId);
-    expect(finalBalance.toNumber()).toBe(originalBalance.toNumber() + amount);
+    expect(transactionRequest.inputs.length).toBe(0);
+
+    await testWallet.fund(transactionRequest);
+
+    const allCoinsAmounts = transactionRequest.inputs.reduce(
+      (accumulator, input) => ('amount' in input ? accumulator.add(input.amount) : accumulator),
+      bn(0)
+    );
+
+    expect(allCoinsAmounts.toNumber()).toBeGreaterThan(amountToTransfer.toNumber());
+  });
+
+  it('should fund transaction request just fine [NOT BASE ASSET]', async () => {
+    const amountToTransfer = 1000;
+    const destination = Wallet.generate({ provider });
+
+    const transactionRequest = new ScriptTransactionRequest({
+      gasLimit: 10000,
+      gasPrice: 1,
+    });
+
+    transactionRequest.addCoinOutput(destination.address, amountToTransfer, assetIdA);
+
+    expect(transactionRequest.inputs.length).toBe(0);
+
+    await testWallet.fund(transactionRequest);
+
+    const allCoinsAmounts = transactionRequest.inputs.reduce(
+      (accumulator, input) => {
+        if ('amount' in input) {
+          // MessageCoin input does not have property assetId
+          const key = 'assetId' in input ? input.assetId.toString() : BaseAssetId;
+
+          return {
+            ...accumulator,
+            [key]: accumulator[key].add(input.amount),
+          };
+        }
+
+        return accumulator;
+      },
+      {
+        [BaseAssetId]: bn(0),
+        [assetIdA]: bn(0),
+      } as Record<string, BN>
+    );
+
+    expect(allCoinsAmounts[BaseAssetId].toNumber()).toBeGreaterThan(0);
+    expect(allCoinsAmounts[assetIdA].toNumber()).toBeGreaterThan(amountToTransfer);
   });
 
   it('should execute transfer just as fine', async () => {
