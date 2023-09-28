@@ -462,21 +462,29 @@ export abstract class BaseTransactionRequest implements BaseTransactionRequestLi
    *
    * @param transactionFee - Transaction fee.
    */
-  getRequiredCoins(transactionFee: BigNumberish): CoinQuantityLike[] {
-    const fee = bn(transactionFee).toNumber() ? transactionFee : bn(1);
-
+  getRequiredCoins(fee: BN): CoinQuantityLike[] {
+    let isFeeAmountAdded = false;
     const coinOutputs = this.getCoinOutputs();
 
-    const coinAmounts = coinOutputs.map((output) => ({
-      amount: output.assetId === BaseAssetId ? bn(output.amount).add(fee) : output.amount,
-      assetId: output.assetId,
-    }));
+    const coinAmounts = coinOutputs.map((output) => {
+      const { amount, assetId = BaseAssetId } = output;
 
-    const hasBaseAsset = coinAmounts.find((coin) => coin.assetId === BaseAssetId);
+      const coinAmount: CoinQuantity = {
+        amount: bn(amount),
+        assetId: assetId.toString(),
+      };
 
-    if (!hasBaseAsset) {
+      if (assetId === BaseAssetId) {
+        coinAmount.amount.add(fee);
+        isFeeAmountAdded = true;
+      }
+
+      return coinAmount;
+    });
+
+    if (!isFeeAmountAdded) {
       coinAmounts.push({
-        amount: fee,
+        amount: bn(fee),
         assetId: BaseAssetId,
       });
     }
