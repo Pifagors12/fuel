@@ -1,6 +1,12 @@
-import { toNumber } from '@fuel-ts/math';
+import { Address } from '@fuel-ts/address';
+import { BaseAssetId } from '@fuel-ts/address/configs';
+import type { BN } from '@fuel-ts/math';
+import { bn, toNumber } from '@fuel-ts/math';
 import { TransactionType } from '@fuel-ts/transactions';
 
+import type { CoinQuantityLikeObject } from '../coin-quantity';
+
+import { ScriptTransactionRequest } from './script-transaction-request';
 import type { TransactionRequestLike } from './types';
 import { transactionRequestify } from './utils';
 
@@ -43,6 +49,97 @@ describe('TransactionRequest', () => {
       };
 
       expect(() => transactionRequestify(txRequestLike)).toThrow('Invalid transaction type: 5');
+    });
+  });
+
+  describe('getRequiredCoins', () => {
+    const assetId1 = '0x0101010101010101010101010101010101010101010101010101010101010101';
+    const assetId2 = '0x0202020202020202020202020202020202020202020202020202020202020202';
+
+    type AssertType = {
+      length: number;
+      coinQuantities: CoinQuantityLikeObject[];
+      expectedAmounts: Record<string, BN>;
+    };
+
+    const assertRequiredCoins = (assert: AssertType) => {
+      const { expectedAmounts, coinQuantities, length } = assert;
+
+      expect(coinQuantities.length).toBe(length);
+
+      coinQuantities.forEach((quantity) => {
+        const { amount, assetId } = quantity;
+        expect(Number(expectedAmounts[String(assetId)])).toBe(Number(amount));
+      });
+    };
+
+    it('should properly get required coins quantities [W/ BASE ASSET ONLY]', () => {
+      const fee = bn(10);
+      const amount = bn(700);
+      const transactionRequest = new ScriptTransactionRequest();
+
+      transactionRequest.addCoinOutput(Address.fromRandom(), amount);
+
+      const coinQuantities = transactionRequest.getRequiredCoins(fee);
+
+      assertRequiredCoins({
+        length: 1,
+        coinQuantities,
+        expectedAmounts: {
+          [assetId1]: amount,
+          [String(BaseAssetId)]: amount.add(fee),
+        },
+      });
+    });
+
+    it('should properly get required coins quantities [W/O BASE ASSET]', () => {
+      const fee = bn(89);
+
+      const amount1 = bn(1200);
+      const amount2 = bn(800);
+
+      const transactionRequest = new ScriptTransactionRequest();
+
+      transactionRequest.addCoinOutput(Address.fromRandom(), amount1, assetId1);
+      transactionRequest.addCoinOutput(Address.fromRandom(), amount2, assetId2);
+
+      const coinQuantities = transactionRequest.getRequiredCoins(fee);
+
+      assertRequiredCoins({
+        length: 3,
+        coinQuantities,
+        expectedAmounts: {
+          [assetId1]: amount1,
+          [assetId2]: amount2,
+          [String(BaseAssetId)]: fee,
+        },
+      });
+    });
+
+    it('should properly get required coins quantities [W/ BASE ASSET AND OTHERS]', () => {
+      const fee = bn(99);
+
+      const amount1 = bn(1200);
+      const amount2 = bn(800);
+      const amount3 = bn(500);
+
+      const transactionRequest = new ScriptTransactionRequest();
+
+      transactionRequest.addCoinOutput(Address.fromRandom(), amount1, assetId1);
+      transactionRequest.addCoinOutput(Address.fromRandom(), amount2, assetId2);
+      transactionRequest.addCoinOutput(Address.fromRandom(), amount3, BaseAssetId);
+
+      const requiredCoins = transactionRequest.getRequiredCoins(fee);
+
+      assertRequiredCoins({
+        length: 3,
+        coinQuantities: requiredCoins,
+        expectedAmounts: {
+          [assetId1]: amount1,
+          [assetId2]: amount2,
+          [String(BaseAssetId)]: amount3.add(fee),
+        },
+      });
     });
   });
 });
