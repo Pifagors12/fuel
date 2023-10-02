@@ -48,10 +48,10 @@ function createContractCall(funcScope: InvocationScopeLike, offset: number): Con
 export class BaseInvocationScope<TReturn = any> {
   protected transactionRequest: ScriptTransactionRequest;
   protected program: AbstractProgram;
-  protected functionInvocationScopes: Array<InvocationScopeLike> = [];
+  public functionInvocationScopes: Array<InvocationScopeLike> = [];
   protected txParameters?: TxParams;
   protected requiredCoins: CoinQuantity[] = [];
-  protected isMultiCall: boolean = false;
+  public isMultiCall: boolean = false;
 
   /**
    * Constructs an instance of BaseInvocationScope.
@@ -177,7 +177,7 @@ export class BaseInvocationScope<TReturn = any> {
   /**
    * Prepares the transaction by updating the script request, required coins, and checking the gas limit.
    */
-  protected async prepareTransaction() {
+  protected async prepareTransaction(options?: TransactionCostOptions) {
     // @ts-expect-error Property 'initWasm' does exist on type and is defined
     await asm.initWasm();
 
@@ -191,7 +191,7 @@ export class BaseInvocationScope<TReturn = any> {
     // sum of all call gasLimits
     this.checkGasLimitTotal();
 
-    if (this.program.account) {
+    if (this.program.account && options?.fundTransaction) {
       await this.fundWithRequiredCoins();
     }
   }
@@ -218,7 +218,9 @@ export class BaseInvocationScope<TReturn = any> {
   async getTransactionCost(options?: TransactionCostOptions) {
     const provider = this.getProvider();
 
-    await this.prepareTransaction();
+    await this.prepareTransaction({
+      fundTransaction: true,
+    });
     const request = transactionRequestify(this.transactionRequest);
     request.gasPrice = bn(toNumber(request.gasPrice) || toNumber(options?.gasPrice || 0));
     const txCost = await provider.getTransactionCost(request, options?.tolerance);
@@ -277,8 +279,14 @@ export class BaseInvocationScope<TReturn = any> {
    *
    * @returns The prepared transaction request.
    */
-  async getTransactionRequest(): Promise<ScriptTransactionRequest> {
-    await this.prepareTransaction();
+  async getTransactionRequest(
+    options: {
+      fundTransaction: boolean;
+    } = {
+      fundTransaction: true,
+    }
+  ): Promise<ScriptTransactionRequest> {
+    await this.prepareTransaction(options);
     return this.transactionRequest;
   }
 
