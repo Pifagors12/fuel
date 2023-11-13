@@ -11,7 +11,8 @@ import { defaultChainConfig } from './defaultChainConfig';
 import type { ChainConfig } from './fuel-node-interfaces';
 
 const defaultFuelCoreArgs = [
-  '--min-gas-price 1',
+  '--min-gas-price',
+  '1',
   '--vm-backtrace',
   '--utxo-validation',
   '--manual_blocks_enabled',
