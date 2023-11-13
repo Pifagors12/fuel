@@ -13,6 +13,7 @@ import type { BytesLike } from 'ethers';
 import * as GraphQL from 'graphql-request';
 
 import type { GqlGetCoinsToSpendQuery } from '../src/__generated__/operations';
+import type { TransactionCost } from '../src/provider';
 import Provider from '../src/provider';
 import { setupTestProvider } from '../src/test-utils';
 import type {
@@ -244,6 +245,38 @@ describe('Provider', () => {
     const provider = await Provider.create(providerUrl, {
       fetch: getCustomFetch('getVersion', { nodeInfo: { nodeVersion: '0.30.0' } }),
     });
+
+    expect(await provider.getVersion()).toEqual('0.30.0');
+  });
+
+  it('can accept options override in connect method', async () => {
+    const providerUrl = FUEL_NETWORK_URL;
+
+    /**
+     * Mocking and initializing Provider with an invalid fetcher just
+     * to ensure it'll be properly overriden in `connect` method below
+     */
+    const fetchChainAndNodeInfo = jest
+      .spyOn(Provider.prototype, 'fetchChainAndNodeInfo')
+      .mockImplementation();
+
+    const provider = await Provider.create(providerUrl, {
+      fetch: () => {
+        throw new Error('This should never happen');
+      },
+    });
+
+    expect(fetchChainAndNodeInfo).toHaveBeenCalledTimes(1);
+
+    /**
+     * Restore mock and call connect with a proper fetch override
+     */
+    fetchChainAndNodeInfo.mockRestore();
+
+    await provider.connect(providerUrl, {
+      fetch: getCustomFetch('getVersion', { nodeInfo: { nodeVersion: '0.30.0' } }),
+    });
+
     expect(await provider.getVersion()).toEqual('0.30.0');
   });
 
@@ -839,18 +872,21 @@ describe('Provider', () => {
     const provider = await Provider.create(FUEL_NETWORK_URL);
     const gasLimit = 1;
     const gasUsed = bn(1000);
-    const transactionParams = {
-      minGasPrice: bn(1),
-      gasPrice: bn(1),
+    const transactionCost: TransactionCost = {
       gasUsed,
-      fee: bn(1),
+      gasPrice: bn(1),
+      minGasPrice: bn(1),
+      maxFee: bn(2),
+      minFee: bn(1),
+      receipts: [],
+      requiredQuantities: [],
     };
 
     const estimateTxSpy = jest.spyOn(provider, 'estimateTxDependencies').mockImplementation();
 
     const txCostSpy = jest
       .spyOn(provider, 'getTransactionCost')
-      .mockReturnValue(Promise.resolve(transactionParams));
+      .mockReturnValue(Promise.resolve(transactionCost));
 
     await expectToThrowFuelError(
       () => provider.sendTransaction(new ScriptTransactionRequest({ gasPrice: 1, gasLimit })),
@@ -868,18 +904,21 @@ describe('Provider', () => {
     const provider = await Provider.create(FUEL_NETWORK_URL);
     const gasPrice = 1;
     const minGasPrice = bn(1000);
-    const transactionParams = {
+    const transactionCost: TransactionCost = {
       minGasPrice,
       gasPrice: bn(1),
       gasUsed: bn(1),
-      fee: bn(1),
+      maxFee: bn(2),
+      minFee: bn(1),
+      receipts: [],
+      requiredQuantities: [],
     };
 
     const estimateTxSpy = jest.spyOn(provider, 'estimateTxDependencies').mockImplementation();
 
     const txCostSpy = jest
       .spyOn(provider, 'getTransactionCost')
-      .mockReturnValue(Promise.resolve(transactionParams));
+      .mockReturnValue(Promise.resolve(transactionCost));
 
     await expectToThrowFuelError(
       () => provider.sendTransaction(new ScriptTransactionRequest({ gasPrice, gasLimit: 1000 })),

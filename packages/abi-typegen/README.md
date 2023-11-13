@@ -36,7 +36,7 @@ Usage: fuels-typegen [options]
 generate typescript from contract abi json files
 
 Options:
-  -i, --inputs <path|glob...>  input paths/globals to your abi json files
+  -i, --inputs <path|glob...>  input paths/globals to your ABI JSON files
   -o, --output <dir>           directory path for generated files
   -c, --contract               generate types for contracts [default]
   -s, --script                 generate types for scripts
@@ -110,7 +110,7 @@ The table below describes how Sway types are converted from/to Typescript.
 |         **options** | Option<`MyType`>               |          `Option<MyType>`           |          `Option<MyType>`           |
 | **raw untyped ptr** | `123`                          |           `BigNumberish`            |                `BN`                 |
 
-> For more info on Sway types, click [here](https://fuellabs.github.io/sway/latest/basics/index.html)
+> For more info on Sway types, click [here](https://docs.fuel.network/docs/sway/basics/built_in_types/)
 
 ## Contributing
 
