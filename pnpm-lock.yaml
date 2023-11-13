@@ -1211,6 +1211,9 @@ importers:
       '@types/uuid':
         specifier: ^9.0.1
         version: 9.0.1
+      type-fest:
+        specifier: ^4.6.0
+        version: 4.6.0
 
   packages/wallet-manager:
     dependencies:

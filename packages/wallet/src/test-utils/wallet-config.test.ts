@@ -100,17 +100,30 @@ describe('WalletConfig', () => {
     // @ts-expect-error currently mandatory - shouldn't be?
     const wallet2 = WalletUnlocked.generate({ provider: null });
 
-    const { wallets } = new WalletConfig({ wallets: [wallet1, wallet2] });
+    const { getWallets } = new WalletConfig({ wallets: [wallet1, wallet2] });
 
-    expect(wallets).toEqual([wallet1, wallet2]);
+    expect(getWallets()).toEqual([wallet1, wallet2]);
   });
 
   it('allows custom assets to be provided', () => {
     const assetId = AssetId.random();
-    const { coins } = new WalletConfig({ assets: [assetId] });
+    const {
+      initial_state: { coins: allCoins },
+    } = new WalletConfig({ assets: [assetId] }).apply({});
+
+    const coins = allCoins.filter((coin, _index, arr) => coin.owner === arr[0].owner);
 
     expect(coins[0].asset_id).toEqual(AssetId.BaseAssetId.value);
     expect(coins[1].asset_id).toEqual(assetId.value);
+    console.log(coins);
     expect(coins.length).toBe(2);
+  });
+
+  it('generated wallets are deterministic', () => {
+    const config1 = new WalletConfig();
+    const config2 = new WalletConfig();
+    expect(config1.getWallets()[0].address.toB256()).toEqual(
+      config2.getWallets()[0].address.toB256()
+    );
   });
 });

@@ -10,7 +10,12 @@ import kill from 'tree-kill';
 import { defaultChainConfig } from './defaultChainConfig';
 import type { ChainConfig } from './fuel-node-interfaces';
 
-const defaultFuelCoreArgs = ['--vm-backtrace', '--utxo-validation', '--manual_blocks_enabled'];
+const defaultFuelCoreArgs = [
+  '--min-gas-price 1',
+  '--vm-backtrace',
+  '--utxo-validation',
+  '--manual_blocks_enabled',
+];
 
 export interface LaunchTestNodeOptions {
   consensusKey: string;
@@ -73,6 +78,8 @@ export const launchTestNode = async ({
       '127.0.0.1',
       '--port',
       port,
+      '--poa-instant',
+      'true',
       ...args,
     ]);
 

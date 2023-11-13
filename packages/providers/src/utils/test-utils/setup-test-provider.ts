@@ -6,7 +6,7 @@ import { Provider } from '../..';
 
 import { defaultChainConfig } from './defaultChainConfig';
 import type { ChainConfig } from './fuel-node-interfaces';
-import type { LaunchTestNodeOptions } from './launchTestNode';
+import type { LaunchNodeResult, LaunchTestNodeOptions } from './launchTestNode';
 import { launchTestNode } from './launchTestNode';
 
 export interface SetupTestProviderOptions {
@@ -24,7 +24,7 @@ export async function setupTestProvider<
   Dispose extends boolean = true,
   R = Dispose extends true
     ? Provider & AsyncDisposable
-    : { provider: Provider; cleanup: () => Promise<void> },
+    : { provider: Provider } & Pick<Awaited<LaunchNodeResult>, 'cleanup'>,
 >(options?: Partial<SetupTestProviderOptions>, dispose?: Dispose): Promise<R> {
   // @ts-expect-error this is a polyfill (see https://devblogs.microsoft.com/typescript/announcing-typescript-5-2/#using-declarations-and-explicit-resource-management)
   Symbol.dispose ??= Symbol('Symbol.dispose');
