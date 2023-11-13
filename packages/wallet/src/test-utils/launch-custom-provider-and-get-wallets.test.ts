@@ -31,34 +31,45 @@ describe('launchCustomProviderAndGetWallets', () => {
     });
   });
 
-  it('default: one wallet, one asset (BaseAssetId), one coin, 1_000_000_00 amount', async () => {
+  it('default: two wallets, three assets (BaseAssetId, AssetId.A, AssetId.B), one coin, 1_000_000_00 amount', async () => {
     await using providerAndWallets = await launchCustomProviderAndGetWallets();
-    const { wallets } = providerAndWallets;
+    const { wallets, provider } = providerAndWallets;
 
-    expect(wallets.length).toBe(1);
-    const [wallet] = wallets;
-    const coins = await wallet.getCoins();
-    expect(coins.length).toBe(1);
+    expect(wallets.length).toBe(2);
+    wallets.forEach((w) => expect(w.provider).toBe(provider));
+    const [wallet1, wallet2] = wallets;
+    const coins1 = await wallet1.getCoins();
+    const coins2 = await wallet2.getCoins();
 
-    const coin = coins[0];
+    expect(coins1.length).toBe(3);
+    expect(coins1.map((x) => [x.amount, x.assetId])).toEqual(
+      coins2.map((x) => [x.amount, x.assetId])
+    );
 
-    expect(coin.assetId).toBe(BaseAssetId);
-    expect(coin.amount.toNumber()).toBe(1_000_000_00);
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    const baseAssetIdCoin = coins1.find((x) => x.assetId === AssetId.BaseAssetId.value)!;
+
+    expect(baseAssetIdCoin.assetId).toBe(BaseAssetId);
+    expect(baseAssetIdCoin.amount.toNumber()).toBe(10_000_000_000);
+
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    const assetACoin = coins1.find((x) => x.assetId === AssetId.A.value)!;
+    expect(assetACoin.amount.toNumber()).toBe(10_000_000_000);
+
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    const assetBCoin = coins1.find((x) => x.assetId === AssetId.B.value)!;
+    expect(assetBCoin.amount.toNumber()).toBe(10_000_000_000);
   });
 
-  it('can be given custom wallet and asset id', async () => {
-    // @ts-expect-error will be updated in launchCustomProviderAndGetWallets
-    const wallet = WalletUnlocked.generate({ provider: null });
+  it('can be given custom asset id', async () => {
     const assetId = AssetId.random();
     await using providerAndWallets = await launchCustomProviderAndGetWallets({
-      walletConfig: new WalletConfig({ wallets: [wallet], assets: [assetId] }),
+      walletConfig: new WalletConfig({ wallets: 1, assets: [assetId] }),
     });
 
-    const { provider, wallets } = providerAndWallets;
-
-    expect(wallets.length).toBe(1);
-    expect(wallets[0]).toBe(wallet);
-    expect(wallet.provider).toBe(provider);
+    const {
+      wallets: [wallet],
+    } = providerAndWallets;
 
     const coins = await wallet.getCoins();
     expect(coins.length).toBe(2);

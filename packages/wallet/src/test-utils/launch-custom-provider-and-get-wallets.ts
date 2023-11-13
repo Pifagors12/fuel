@@ -21,19 +21,13 @@ export async function launchCustomProviderAndGetWallets<
   {
     walletConfig = new WalletConfig(),
     providerOptions,
-    nodeOptions,
+    nodeOptions = {},
   }: Partial<LaunchCustomProviderAndGetWalletsOptions> = {},
   dispose?: Dispose
 ): Promise<ReturnType> {
-  const { wallets, coins } = walletConfig;
+  const wallets = walletConfig.getWallets();
 
-  const chainConfig = {
-    ...nodeOptions?.chainConfig,
-    initial_state: {
-      ...nodeOptions?.chainConfig?.initial_state,
-      coins: coins.concat(nodeOptions?.chainConfig?.initial_state?.coins || []),
-    },
-  };
+  const chainConfig = walletConfig.apply(nodeOptions.chainConfig);
 
   const { provider, cleanup } = await setupTestProvider(
     {

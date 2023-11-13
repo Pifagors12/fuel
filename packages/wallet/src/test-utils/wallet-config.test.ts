@@ -1,8 +1,6 @@
 import { FuelError } from '@fuel-ts/errors';
 import { expectToThrowFuelError } from '@fuel-ts/errors/test-utils';
 
-import { WalletUnlocked } from '../wallets';
-
 import { AssetId } from './asset-id';
 import { WalletConfig } from './wallet-config';
 
@@ -18,14 +16,6 @@ describe('WalletConfig', () => {
 
     await expectToThrowFuelError(
       () => new WalletConfig({ wallets: 0 }),
-      new FuelError(
-        FuelError.CODES.INVALID_INPUT_PARAMETERS,
-        'Number of wallets must be greater than zero.'
-      )
-    );
-
-    await expectToThrowFuelError(
-      () => new WalletConfig({ wallets: [] }),
       new FuelError(
         FuelError.CODES.INVALID_INPUT_PARAMETERS,
         'Number of wallets must be greater than zero.'
@@ -94,17 +84,6 @@ describe('WalletConfig', () => {
     );
   });
 
-  it('allows custom wallets to be provided', () => {
-    // @ts-expect-error currently mandatory - shouldn't be?
-    const wallet1 = WalletUnlocked.generate({ provider: null });
-    // @ts-expect-error currently mandatory - shouldn't be?
-    const wallet2 = WalletUnlocked.generate({ provider: null });
-
-    const { getWallets } = new WalletConfig({ wallets: [wallet1, wallet2] });
-
-    expect(getWallets()).toEqual([wallet1, wallet2]);
-  });
-
   it('allows custom assets to be provided', () => {
     const assetId = AssetId.random();
     const {
@@ -115,7 +94,6 @@ describe('WalletConfig', () => {
 
     expect(coins[0].asset_id).toEqual(AssetId.BaseAssetId.value);
     expect(coins[1].asset_id).toEqual(assetId.value);
-    console.log(coins);
     expect(coins.length).toBe(2);
   });
 

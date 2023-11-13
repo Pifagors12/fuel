@@ -9,11 +9,10 @@ import { AssetId } from './asset-id';
 
 interface WalletConfigOptions {
   /**
-   * If `number`, this sets the number of wallets to generate.
+   * Number of wallets to generate.
    *
-   * If `WalletUnlocked[]`, their addresses are used for seed data and their providers are set.
    */
-  wallets: number | WalletUnlocked[];
+  wallets: number;
 
   /**
    * If `number`, the number of unique asset ids each wallet will own.
@@ -40,9 +39,6 @@ export class WalletConfig {
   private coins: ChainConfig['initial_state']['coins'];
   private options: WalletConfigOptions;
   public getWallets: () => WalletUnlocked[] = () => {
-    if (Array.isArray(this.options.wallets)) {
-      return this.options.wallets;
-    }
     const generatedWallets: WalletUnlocked[] = [];
     for (let index = 1; index <= this.options.wallets; index++) {
       const pk = new Uint8Array(32);
