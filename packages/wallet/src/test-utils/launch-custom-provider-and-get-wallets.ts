@@ -7,7 +7,7 @@ import type { WalletUnlocked } from '../wallets';
 import { WalletConfig } from './wallet-config';
 
 export interface LaunchCustomProviderAndGetWalletsOptions extends SetupTestProviderOptions {
-  /** Configures the wallets that should exist in the genesis block of a the test node. */
+  /** Configures the wallets that should exist in the genesis block of a node. */
   walletConfig: WalletConfig;
 }
 
