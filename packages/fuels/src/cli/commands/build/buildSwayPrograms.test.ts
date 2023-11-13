@@ -96,7 +96,7 @@ describe('buildSwayPrograms', () => {
     jest.spyOn(process.stdout, 'write').mockImplementation();
     configureLogging({ isLoggingEnabled: true, isDebugEnabled: false });
 
-    await buildSwayProgramsMod.buildSwayProgram(config, config.workspace);
+    await buildSwayProgramsMod.buildSwayProgram(config, config.workspace as string);
 
     expect(spawn).toHaveBeenCalledTimes(1);
     expect(spawnMocks.stderr.pipe).toHaveBeenCalledTimes(1);
@@ -111,7 +111,7 @@ describe('buildSwayPrograms', () => {
     jest.spyOn(process.stdout, 'write').mockImplementation();
     configureLogging({ isLoggingEnabled: true, isDebugEnabled: true });
 
-    await buildSwayProgramsMod.buildSwayProgram(config, config.workspace);
+    await buildSwayProgramsMod.buildSwayProgram(config, config.workspace as string);
 
     expect(spawn).toHaveBeenCalledTimes(1);
     expect(spawnMocks.stderr.pipe).toHaveBeenCalledTimes(1);
