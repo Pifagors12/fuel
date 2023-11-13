@@ -25,7 +25,7 @@ export async function launchCustomProviderAndGetWallets<
   }: Partial<LaunchCustomProviderAndGetWalletsOptions> = {},
   dispose?: Dispose
 ): Promise<ReturnType> {
-  const wallets = walletConfig.getWallets();
+  const wallets = walletConfig.wallets;
 
   const chainConfig = walletConfig.apply(nodeOptions.chainConfig);
 

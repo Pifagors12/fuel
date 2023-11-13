@@ -25,16 +25,17 @@ describe('test-message', () => {
     const data = '1234';
     const nonce = hexlify(randomBytes(32));
 
-    const message = new TestMessage({
+    const testMessage = new TestMessage({
       amount,
       recipient,
       sender,
       nonce,
       da_height: daHeight,
       data,
-    }).toChainMessage();
+    });
 
-    expect(message.amount).toEqual(new BN(amount).toHex());
+    const message = testMessage.toChainMessage();
+    expect(message.amount).toEqual(new BN(amount).toHex(8));
     expect(message.da_height).toEqual(daHeight);
     expect(message.data).toEqual(data);
     expect(message.nonce).toEqual(nonce);

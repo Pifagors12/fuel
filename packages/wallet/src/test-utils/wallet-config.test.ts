@@ -96,12 +96,4 @@ describe('WalletConfig', () => {
     expect(coins[1].asset_id).toEqual(assetId.value);
     expect(coins.length).toBe(2);
   });
-
-  it('generated wallets are deterministic', () => {
-    const config1 = new WalletConfig();
-    const config2 = new WalletConfig();
-    expect(config1.getWallets()[0].address.toB256()).toEqual(
-      config2.getWallets()[0].address.toB256()
-    );
-  });
 });

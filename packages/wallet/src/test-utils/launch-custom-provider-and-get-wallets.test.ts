@@ -8,6 +8,7 @@ import { WalletUnlocked } from '../wallets';
 
 import { AssetId } from './asset-id';
 import { launchCustomProviderAndGetWallets } from './launch-custom-provider-and-get-wallets';
+import { TestMessage } from './test-message';
 import { WalletConfig } from './wallet-config';
 
 describe('launchCustomProviderAndGetWallets', () => {
@@ -61,10 +62,11 @@ describe('launchCustomProviderAndGetWallets', () => {
     expect(assetBCoin.amount.toNumber()).toBe(10_000_000_000);
   });
 
-  it('can be given custom asset id', async () => {
+  it('can be given custom asset id and message', async () => {
     const assetId = AssetId.random();
+    const testMessage = new TestMessage();
     await using providerAndWallets = await launchCustomProviderAndGetWallets({
-      walletConfig: new WalletConfig({ wallets: 1, assets: [assetId] }),
+      walletConfig: new WalletConfig({ wallets: 1, assets: [assetId], messages: [testMessage] }),
     });
 
     const {
@@ -77,12 +79,25 @@ describe('launchCustomProviderAndGetWallets', () => {
     const coin1 = coins[0];
 
     expect(coin1.assetId).toBe(BaseAssetId);
-    expect(coin1.amount.toNumber()).toBe(1_000_000_00);
+    expect(coin1.amount.toNumber()).toBe(1_000_000_000_0);
 
     const coin2 = coins[1];
 
     expect(coin2.assetId).toBe(assetId.value);
-    expect(coin2.amount.toNumber()).toBe(1_000_000_00);
+    expect(coin2.amount.toNumber()).toBe(1_000_000_000_0);
+
+    const messages = await wallet.getMessages();
+    expect(messages.length).toBe(1);
+
+    const [message] = messages;
+    const chainMessage = testMessage.toChainMessage(wallet.address);
+
+    expect(message.amount.toHex(8)).toEqual(chainMessage.amount);
+    expect(message.recipient.toB256()).toEqual(chainMessage.recipient);
+    expect(message.sender.toB256()).toEqual(chainMessage.sender);
+    expect(toNumber(message.daHeight)).toEqual(toNumber(chainMessage.da_height));
+    expect(message.data.toString()).toEqual(toNumber(chainMessage.data).toString());
+    expect(message.nonce).toEqual(chainMessage.nonce);
   });
 
   it('can return multiple wallets with multiple assets, coins and amounts', async () => {
@@ -123,17 +138,10 @@ describe('launchCustomProviderAndGetWallets', () => {
   test("gives control to add additional custom coins/messages to the genesis block without overriding walletConfig's settings", async () => {
     const pk = Signer.generatePrivateKey();
     const signer = new Signer(pk);
-    const address = signer.address.toHexString();
+    const address = signer.address;
 
-    const coin = { owner: address, amount: toHex(100, 8), asset_id: BaseAssetId };
-    const message = {
-      sender: '0xc43454aa38dd91f88109a4b7aef5efb96ce34e3f24992fe0f81d233ca686f80f',
-      recipient: address,
-      nonce: '0x0101010101010101010101010101010101010101010101010101010101010101',
-      amount: toHex(200, 8),
-      data: '02',
-      da_height: '0x00',
-    };
+    const coin = { owner: address.toB256(), amount: toHex(100, 8), asset_id: BaseAssetId };
+    const message = new TestMessage({ recipient: signer.address }).toChainMessage();
 
     await using providerAndWallets = await launchCustomProviderAndGetWallets({
       nodeOptions: {
@@ -162,15 +170,15 @@ describe('launchCustomProviderAndGetWallets', () => {
     expect(customWalletMessage.data.toString()).toEqual(toNumber(message.data).toString());
     expect(customWalletMessage.nonce).toEqual(message.nonce);
 
-    expect(wallets.length).toBe(1);
+    expect(wallets.length).toBe(2);
     const [wallet] = wallets;
 
     const coins = await wallet.getCoins();
-    expect(coins.length).toBe(1);
+    expect(coins.length).toBe(3);
 
     const walletCoin = coins[0];
 
     expect(walletCoin.assetId).toBe(BaseAssetId);
-    expect(walletCoin.amount.toNumber()).toBe(1_000_000_00);
+    expect(walletCoin.amount.toNumber()).toBe(1_000_000_000_0);
   });
 });

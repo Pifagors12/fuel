@@ -1,11 +1,13 @@
 import { FuelError } from '@fuel-ts/errors';
 import { toHex } from '@fuel-ts/math';
 import type { ChainConfig } from '@fuel-ts/providers/test-utils';
+import { randomBytes } from 'crypto';
 import type { PartialDeep } from 'type-fest';
 
 import { WalletUnlocked } from '../wallets';
 
 import { AssetId } from './asset-id';
+import type { TestMessage } from './test-message';
 
 interface WalletConfigOptions {
   /**
@@ -30,21 +32,26 @@ interface WalletConfigOptions {
    * For each coin, the amount it'll contain.
    */
   amountPerCoin: number;
+
+  /**
+   * Messages that are supposed to be on the wallet.
+   * The `recipient` field of the message is overriden to be the wallet's address.
+   */
+  messages: TestMessage[];
 }
 
 /**
  * Used for configuring the wallets that should exist in the genesis block of a test node.
  */
 export class WalletConfig {
-  private coins: ChainConfig['initial_state']['coins'];
+  private initialState: ChainConfig['initial_state'];
   private options: WalletConfigOptions;
-  public getWallets: () => WalletUnlocked[] = () => {
+  public wallets: WalletUnlocked[];
+  private generateWallets: () => WalletUnlocked[] = () => {
     const generatedWallets: WalletUnlocked[] = [];
     for (let index = 1; index <= this.options.wallets; index++) {
-      const pk = new Uint8Array(32);
-      pk[31] = index;
-      // @ts-expect-error will be updated later
-      generatedWallets.push(new WalletUnlocked(pk, null));
+      // @ts-expect-error provider will be updated later
+      generatedWallets.push(new WalletUnlocked(randomBytes(32), null));
     }
     return generatedWallets;
   };
@@ -54,15 +61,22 @@ export class WalletConfig {
     assets = [AssetId.A, AssetId.B],
     coinsPerAsset = 1,
     amountPerCoin = 10_000_000_000,
+    messages = [],
   }: Partial<WalletConfigOptions> = {}) {
-    WalletConfig.guard({ wallets, assets, coinsPerAsset, amountPerCoin });
+    WalletConfig.guard({ wallets, assets, coinsPerAsset, amountPerCoin, messages });
+
     this.options = {
       wallets,
       assets,
       coinsPerAsset,
       amountPerCoin,
+      messages,
     };
-    this.coins = WalletConfig.createAssets(this.getWallets(), assets, coinsPerAsset, amountPerCoin);
+    this.wallets = this.generateWallets();
+    this.initialState = {
+      messages: WalletConfig.createMessages(this.wallets, messages),
+      coins: WalletConfig.createCoins(this.wallets, assets, coinsPerAsset, amountPerCoin),
+    };
   }
 
   apply(chainConfig: PartialDeep<ChainConfig> | undefined): PartialDeep<ChainConfig> & {
@@ -72,12 +86,19 @@ export class WalletConfig {
       ...chainConfig,
       initial_state: {
         ...chainConfig?.initial_state,
-        coins: this.coins.concat(chainConfig?.initial_state?.coins || []),
+        coins: this.initialState.coins.concat(chainConfig?.initial_state?.coins || []),
+        messages: this.initialState.messages.concat(chainConfig?.initial_state?.messages ?? []),
       },
     };
   }
 
-  private static createAssets(
+  private static createMessages(wallets: WalletUnlocked[], messages: TestMessage[]) {
+    return messages
+      .map((msg) => wallets.map((wallet) => msg.toChainMessage(wallet.address)))
+      .flatMap((x) => x);
+  }
+
+  private static createCoins(
     wallets: WalletUnlocked[],
     assets: number | AssetId[],
     coinsPerAsset: number,
