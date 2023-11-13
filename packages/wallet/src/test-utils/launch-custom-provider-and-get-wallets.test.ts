@@ -32,7 +32,7 @@ describe('launchCustomProviderAndGetWallets', () => {
     });
   });
 
-  it('default: two wallets, three assets (BaseAssetId, AssetId.A, AssetId.B), one coin, 1_000_000_00 amount', async () => {
+  it('default: two wallets, three assets (BaseAssetId, AssetId.A, AssetId.B), one coin, 10_000_000_000_ amount', async () => {
     await using providerAndWallets = await launchCustomProviderAndGetWallets();
     const { wallets, provider } = providerAndWallets;
 
@@ -79,12 +79,12 @@ describe('launchCustomProviderAndGetWallets', () => {
     const coin1 = coins[0];
 
     expect(coin1.assetId).toBe(BaseAssetId);
-    expect(coin1.amount.toNumber()).toBe(1_000_000_000_0);
+    expect(coin1.amount.toNumber()).toBe(10_000_000_000);
 
     const coin2 = coins[1];
 
     expect(coin2.assetId).toBe(assetId.value);
-    expect(coin2.amount.toNumber()).toBe(1_000_000_000_0);
+    expect(coin2.amount.toNumber()).toBe(10_000_000_000);
 
     const messages = await wallet.getMessages();
     expect(messages.length).toBe(1);
@@ -179,6 +179,6 @@ describe('launchCustomProviderAndGetWallets', () => {
     const walletCoin = coins[0];
 
     expect(walletCoin.assetId).toBe(BaseAssetId);
-    expect(walletCoin.amount.toNumber()).toBe(1_000_000_000_0);
+    expect(walletCoin.amount.toNumber()).toBe(10_000_000_000);
   });
 });
