@@ -11,6 +11,8 @@ import { defaultChainConfig } from './defaultChainConfig';
 import type { ChainConfig } from './fuel-node-interfaces';
 
 const defaultFuelCoreArgs = [
+  '--poa-instant',
+  'true',
   '--min-gas-price',
   '1',
   '--vm-backtrace',
@@ -79,8 +81,6 @@ export const launchTestNode = async ({
       '127.0.0.1',
       '--port',
       port,
-      '--poa-instant',
-      'true',
       ...args,
     ]);
 
