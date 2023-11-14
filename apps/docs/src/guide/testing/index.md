@@ -28,3 +28,9 @@ The code above spins up a `fuel-core` node on the first available port your mach
 You can also configure wallets and deploy multiple contracts with them:
 
 <<< @/../../../packages/contract/src/test-utils/test-node-launcher.test.ts#TestNodeLauncher-multiple-contracts-and-wallets{ts:line-numbers}
+
+#### Setting up a custom chain
+
+The default chain config of `TestNodeLauncher` is the current beta network iteration's chain config. If you need a different chain config, you can specify a `DEFAULT_CHAIN_CONFIG_PATH` environment variable which points to your chain config. `TestNodeLauncher` will read that config and work with it instead. Note that it'll still create a second temporary file which will be the one given to the fuel-core node, but it'll be derived from the provided base file. This is because `TestNodeLauncher` adds coins and messages to the genesis block via `WalletConfig`.
+
+Besides the chain config, you can provide arguments to the `fuel-core` node via the `nodeOptions.args` property. For a detailed list of all possible arguments run `fuel-core run --help`.

@@ -1,7 +1,12 @@
 import { FuelError } from '@fuel-ts/errors';
 import { expectToThrowFuelError, safeExec } from '@fuel-ts/errors/test-utils';
 import { Provider } from '@fuel-ts/providers';
+import type { ChainConfig } from '@fuel-ts/providers/test-utils';
 import { WalletConfig } from '@fuel-ts/wallet/test-utils';
+import { randomUUID } from 'crypto';
+import { existsSync, mkdirSync, readFileSync } from 'fs';
+import { writeFile } from 'fs/promises';
+import os from 'os';
 import { join } from 'path';
 
 import { TestNodeLauncher } from './test-node-launcher';
@@ -133,5 +138,36 @@ describe('TestNodeLauncher', () => {
         message: `Invalid walletIndex 2; wallets array contains 2 elements.`,
       }
     );
+  });
+
+  test('can be given a different base chain config via an environment variable', async () => {
+    const chainConfig = JSON.parse(
+      readFileSync(
+        join(__dirname, '../../../../', '.fuel-core', 'configs', 'chainConfig.json'),
+        'utf-8'
+      )
+    ) as ChainConfig;
+
+    const chainName = 'gimme_fuel';
+    chainConfig.chain_name = chainName;
+
+    const tempDirPath = join(os.tmpdir(), '.fuels-ts', randomUUID());
+
+    if (!existsSync(tempDirPath)) {
+      mkdirSync(tempDirPath, { recursive: true });
+    }
+    const chainConfigPath = join(tempDirPath, '.chainConfig.json');
+
+    // Write a temporary chain configuration file.
+    await writeFile(chainConfigPath, JSON.stringify(chainConfig), 'utf-8');
+
+    process.env.DEFAULT_CHAIN_CONFIG_PATH = chainConfigPath;
+
+    await using launched = await TestNodeLauncher.launch();
+    const { provider } = launched;
+
+    const { name } = await provider.fetchChain();
+
+    expect(name).toEqual(chainName);
   });
 });
