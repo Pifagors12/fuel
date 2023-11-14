@@ -105,7 +105,12 @@ export class TestNodeLauncher {
       if (typeof config === 'string') {
         return TestNodeLauncher.prepareContractFactory(config, undefined, wallets[0]);
       }
-      if (config.walletIndex && (config.walletIndex < 0 || config.walletIndex >= wallets.length)) {
+
+      const validWalletIndex = config.walletIndex
+        ? config.walletIndex >= 0 && config.walletIndex < wallets.length
+        : true;
+
+      if (!validWalletIndex) {
         throw new FuelError(
           FuelError.CODES.INVALID_INPUT_PARAMETERS,
           `Invalid walletIndex ${config.walletIndex}; wallets array contains ${wallets.length} elements.`
