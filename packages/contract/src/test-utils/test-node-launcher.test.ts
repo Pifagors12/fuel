@@ -102,7 +102,7 @@ describe('TestNodeLauncher', () => {
   });
 
   test('a contract can be deployed by providing just the path', async () => {
-    // #region TestNodeLauncher-deploy-contract
+    // #region deploy-contract
     await using launched = await TestNodeLauncher.launch({
       deployContracts: [pathToContractRootDir],
     });
@@ -114,11 +114,11 @@ describe('TestNodeLauncher', () => {
 
     const response = await contract.functions.test_function().txParams({ gasPrice }).call();
     expect(response.value).toBe(true);
-    // #endregion TestNodeLauncher-deploy-contract
+    // #endregion deploy-contract
   });
 
   test('multiple contracts can be deployed with different wallets', async () => {
-    // #region TestNodeLauncher-multiple-contracts-and-wallets
+    // #region multiple-contracts-and-wallets
     await using launched = await TestNodeLauncher.launch({
       walletConfig: new WalletConfig({ wallets: 2 }),
       deployContracts: [
@@ -131,7 +131,7 @@ describe('TestNodeLauncher', () => {
       contracts: [contract1, contract2],
       wallets: [wallet1, wallet2],
     } = launched;
-    // #endregion TestNodeLauncher-multiple-contracts-and-wallets
+    // #endregion multiple-contracts-and-wallets
 
     const gasPrice = contract1.provider.getGasConfig().minGasPrice;
 
@@ -164,11 +164,11 @@ describe('TestNodeLauncher', () => {
   });
 
   test('can be given different fuel-core args via an environment variable', async () => {
-    // #region TestNodeLauncher-custom-fuel-core-args
+    // #region custom-fuel-core-args
     process.env.DEFAULT_FUEL_CORE_ARGS = `--min-gas-price 150 --tx-max-depth 20`;
 
     await using launched = await TestNodeLauncher.launch();
-    // #endregion
+    // #endregion custom-fuel-core-args
 
     const { provider } = launched;
 
@@ -181,11 +181,11 @@ describe('TestNodeLauncher', () => {
     const chainName = 'gimme_fuel';
     const [chainConfigPath, cleanup] = await generateChainConfigFile(chainName);
 
-    // #region TestNodeLauncher-custom-chain-config
+    // #region custom-chain-config
     process.env.DEFAULT_CHAIN_CONFIG_PATH = chainConfigPath;
 
     await using launched = await TestNodeLauncher.launch();
-    // #endregion
+    // #endregion custom-chain-config
     cleanup();
     process.env.DEFAULT_CHAIN_CONFIG_PATH = '';
 
