@@ -36,6 +36,6 @@ The default chain config of `TestNodeLauncher` is the current beta network itera
 <<< @/../../../packages/contract/src/test-utils/test-node-launcher.ts#TestNodeLauncher-custom-chain-config{ts:line-numbers}
 
 Besides the chain config, you can provide arguments to the `fuel-core` node via the `nodeOptions.args` property. For a detailed list of all possible arguments run `fuel-core run --help`.
-If you want _all_ your tests to run with the same config, consider specifying the `DEFAULT_FUEL_CORE_ARGS` environment variable.
+If you want _all_ your tests to run with the same config, consider specifying the `DEFAULT_FUEL_CORE_ARGS` environment variable. _Note: these args will be overriden in a test if `nodeOptions.args` is provided._
 
 <<< @/../../../packages/contract/src/test-utils/test-node-launcher.ts#TestNodeLauncher-custom-fuel-core-args{ts:line-numbers}

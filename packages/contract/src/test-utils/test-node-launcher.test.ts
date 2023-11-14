@@ -173,7 +173,8 @@ describe('TestNodeLauncher', () => {
     const { provider } = launched;
 
     expect(provider.getGasConfig().minGasPrice.toNumber()).toEqual(150);
-    expect(provider.getNode().maxDepth).toEqual(20);
+    expect(provider.getNode().maxDepth.toNumber()).toEqual(20);
+    process.env.DEFAULT_FUEL_CORE_ARGS = '';
   });
 
   test('can be given a different base chain config via an environment variable', async () => {
@@ -186,6 +187,7 @@ describe('TestNodeLauncher', () => {
     await using launched = await TestNodeLauncher.launch();
     // #endregion
     cleanup();
+    process.env.DEFAULT_CHAIN_CONFIG_PATH = '';
 
     const { provider } = launched;
 
@@ -213,6 +215,8 @@ describe('TestNodeLauncher', () => {
     });
 
     cleanup();
+    process.env.DEFAULT_CHAIN_CONFIG_PATH = '';
+
     const { provider } = launched;
 
     const {

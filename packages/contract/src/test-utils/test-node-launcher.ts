@@ -54,6 +54,7 @@ export class TestNodeLauncher {
     dispose?: Dispose
   ): Promise<ReturnType> {
     const chainConfig = TestNodeLauncher.getChainConfig(nodeOptions);
+    const args = TestNodeLauncher.getFuelCoreArgs(nodeOptions);
 
     const { provider, wallets, cleanup } = await launchCustomProviderAndGetWallets(
       {
@@ -62,6 +63,7 @@ export class TestNodeLauncher {
         nodeOptions: {
           ...nodeOptions,
           chainConfig,
+          args,
         },
       },
       false
@@ -155,5 +157,13 @@ export class TestNodeLauncher {
     }
 
     return mergeDeepRight(envChainConfig ?? {}, nodeOptions.chainConfig ?? {});
+  }
+
+  private static getFuelCoreArgs(nodeOptions: TestNodeLauncherOptions['nodeOptions']) {
+    const envArgs = process.env.DEFAULT_FUEL_CORE_ARGS
+      ? process.env.DEFAULT_FUEL_CORE_ARGS.split(' ')
+      : undefined;
+
+    return nodeOptions.args ?? envArgs;
   }
 }
