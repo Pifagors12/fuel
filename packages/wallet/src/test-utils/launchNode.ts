@@ -71,9 +71,9 @@ export const launchNodeAndGetWallets = async ({
     config = JSON.parse(await readFile(launchNodeOptions.chainConfigPath, 'utf-8')) as ChainConfig;
   }
 
-  const { cleanup, ip, port } = await launchTestNode({ ...launchNodeOptions, chainConfig: config });
+  const { cleanup, url } = await launchTestNode({ ...launchNodeOptions, chainConfig: config });
 
-  const provider = await Provider.create(`http://${ip}:${port}/graphql`);
+  const provider = await Provider.create(url);
   const wallets = await generateWallets(walletCount, provider);
 
   return { wallets, stop: cleanup, provider };

@@ -36,8 +36,7 @@ export interface LaunchTestNodeOptions {
 
 export type LaunchNodeResult = Promise<{
   cleanup: () => Promise<void>;
-  ip: string;
-  port: string;
+  url: string;
 }>;
 
 /**
@@ -126,7 +125,10 @@ export const launchTestNode = async ({
       if (chunk.indexOf(graphQLStartSubstring) !== -1) {
         const [nodeIp, nodePort] = chunk.split(' ').at(-1)!.trim().split(':');
 
-        resolve({ cleanup, ip: nodeIp, port: nodePort });
+        resolve({
+          cleanup,
+          url: `http://${nodeIp}:${nodePort}/graphql`,
+        });
       }
 
       if (/error/i.test(chunk)) {

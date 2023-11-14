@@ -10,10 +10,8 @@ import { sleepUntilTrue } from '../sleep';
 import { defaultChainConfig } from './defaultChainConfig';
 import { launchTestNode } from './launchTestNode';
 
-async function nodeIsRunning(ip: string, port: string): Promise<boolean> {
+async function nodeIsRunning(url: string): Promise<boolean> {
   return new Promise((resolve) => {
-    const url = `http://${ip}:${port}/graphql`;
-
     const req = http.request(parse(url), () => {
       resolve(true);
     });
@@ -48,18 +46,20 @@ describe('launchNode', () => {
   });
 
   it('cleanup kills the started node', async () => {
-    const { cleanup, ip, port } = await launchTestNode();
-    expect(await nodeIsRunning(ip, port)).toBe(true);
+    const { cleanup, url } = await launchTestNode();
+    expect(await nodeIsRunning(url)).toBe(true);
 
     await cleanup();
 
-    expect(await nodeIsRunning(ip, port)).toBe(false);
+    expect(await nodeIsRunning(url)).toBe(false);
   });
 
   it('can launch a node on a specific port', async () => {
     const port = '5678';
-    const { cleanup, ip } = await launchTestNode({ port });
-    expect(await nodeIsRunning(ip, port)).toBe(true);
+    const { cleanup, url } = await launchTestNode({ port });
+    const ip = url.split(/\d*\/graphql$/)[0];
+    const expectedUrl = `${ip}:${port}/graphql`;
+    expect(await nodeIsRunning(expectedUrl)).toBe(true);
 
     await cleanup();
   });
@@ -91,53 +91,53 @@ describe('launchNode', () => {
   });
 
   it('kills node on event:exit', async () => {
-    const { ip, port } = await launchTestNode();
+    const { url } = await launchTestNode();
 
     process.emit('exit', 0);
 
     // give time for cleanup to kill the node
-    await sleepUntilTrue(async () => !(await nodeIsRunning(ip, port)), 500);
+    await sleepUntilTrue(async () => !(await nodeIsRunning(url)), 500);
 
-    expect(await nodeIsRunning(ip, port)).toBe(false);
+    expect(await nodeIsRunning(url)).toBe(false);
   });
 
   it('kills node on event:SIGINT (ctrl+c)', async () => {
-    const { ip, port } = await launchTestNode();
+    const { url } = await launchTestNode();
 
     process.emit('SIGINT');
 
-    await sleepUntilTrue(async () => !(await nodeIsRunning(ip, port)), 500);
+    await sleepUntilTrue(async () => !(await nodeIsRunning(url)), 500);
 
-    expect(await nodeIsRunning(ip, port)).toBe(false);
+    expect(await nodeIsRunning(url)).toBe(false);
   });
 
   it('kills node on event:SIGUSR1', async () => {
-    const { ip, port } = await launchTestNode();
+    const { url } = await launchTestNode();
 
     process.emit('SIGUSR1');
 
-    await sleepUntilTrue(async () => !(await nodeIsRunning(ip, port)), 500);
+    await sleepUntilTrue(async () => !(await nodeIsRunning(url)), 500);
 
-    expect(await nodeIsRunning(ip, port)).toBe(false);
+    expect(await nodeIsRunning(url)).toBe(false);
   });
 
   it('kills node on event:SIGUSR2', async () => {
-    const { ip, port } = await launchTestNode();
+    const { url } = await launchTestNode();
 
     process.emit('SIGUSR2');
 
-    await sleepUntilTrue(async () => !(await nodeIsRunning(ip, port)), 500);
+    await sleepUntilTrue(async () => !(await nodeIsRunning(url)), 500);
 
-    expect(await nodeIsRunning(ip, port)).toBe(false);
+    expect(await nodeIsRunning(url)).toBe(false);
   });
 
   it('kills node on event:uncaughtException', async () => {
-    const { ip, port } = await launchTestNode();
+    const { url } = await launchTestNode();
 
     process.emit('uncaughtException', new Error());
 
-    await sleepUntilTrue(async () => !(await nodeIsRunning(ip, port)), 500);
+    await sleepUntilTrue(async () => !(await nodeIsRunning(url)), 500);
 
-    expect(await nodeIsRunning(ip, port)).toBe(false);
+    expect(await nodeIsRunning(url)).toBe(false);
   });
 });

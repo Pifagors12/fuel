@@ -36,13 +36,10 @@ export async function setupTestProvider<
     chainConfig: mergeDeepRight(defaultChainConfig, options?.nodeOptions?.chainConfig || {}),
   };
 
-  const { cleanup, ip, port } = await launchTestNode(nodeOptions);
+  const { cleanup, url } = await launchTestNode(nodeOptions);
 
   try {
-    const provider = await Provider.create(
-      `http://${ip}:${port}/graphql`,
-      options?.providerOptions
-    );
+    const provider = await Provider.create(url, options?.providerOptions);
 
     return (
       dispose ?? true
