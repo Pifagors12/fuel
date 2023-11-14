@@ -3,8 +3,8 @@ import { expectToThrowFuelError, safeExec } from '@fuel-ts/errors/test-utils';
 import { Provider } from '@fuel-ts/providers';
 import type { ChainConfig } from '@fuel-ts/providers/test-utils';
 import { WalletConfig } from '@fuel-ts/wallet/test-utils';
-import { randomUUID } from 'crypto';
-import { existsSync, mkdirSync, readFileSync } from 'fs';
+import { randomInt, randomUUID } from 'crypto';
+import { existsSync, mkdirSync, readFileSync, rmSync } from 'fs';
 import { writeFile } from 'fs/promises';
 import os from 'os';
 import { join } from 'path';
@@ -12,6 +12,29 @@ import { join } from 'path';
 import { TestNodeLauncher } from './test-node-launcher';
 
 const pathToContractRootDir = join(__dirname, '../../test/fixtures/simple-contract');
+
+async function generateChainConfigFile(chainName: string): Promise<[string, () => void]> {
+  const chainConfig = JSON.parse(
+    readFileSync(
+      join(__dirname, '../../../../', '.fuel-core', 'configs', 'chainConfig.json'),
+      'utf-8'
+    )
+  ) as ChainConfig;
+
+  chainConfig.chain_name = chainName;
+
+  const tempDirPath = join(os.tmpdir(), '.fuels-ts', randomUUID());
+
+  if (!existsSync(tempDirPath)) {
+    mkdirSync(tempDirPath, { recursive: true });
+  }
+  const chainConfigPath = join(tempDirPath, '.chainConfig.json');
+
+  // Write a temporary chain configuration file.
+  await writeFile(chainConfigPath, JSON.stringify(chainConfig), 'utf-8');
+
+  return [chainConfigPath, () => rmSync(tempDirPath, { recursive: true, force: true })];
+}
 
 describe('TestNodeLauncher', () => {
   test('kills the node after going out of scope', async () => {
@@ -140,34 +163,63 @@ describe('TestNodeLauncher', () => {
     );
   });
 
+  test('can be given different fuel-core args via an environment variable', async () => {
+    // #region TestNodeLauncher-custom-fuel-core-args
+    process.env.DEFAULT_FUEL_CORE_ARGS = `--min-gas-price 150 --tx-max-depth 20`;
+
+    await using launched = await TestNodeLauncher.launch();
+    // #endregion
+
+    const { provider } = launched;
+
+    expect(provider.getGasConfig().minGasPrice.toNumber()).toEqual(150);
+    expect(provider.getNode().maxDepth).toEqual(20);
+  });
+
   test('can be given a different base chain config via an environment variable', async () => {
-    const chainConfig = JSON.parse(
-      readFileSync(
-        join(__dirname, '../../../../', '.fuel-core', 'configs', 'chainConfig.json'),
-        'utf-8'
-      )
-    ) as ChainConfig;
-
     const chainName = 'gimme_fuel';
-    chainConfig.chain_name = chainName;
+    const [chainConfigPath, cleanup] = await generateChainConfigFile(chainName);
 
-    const tempDirPath = join(os.tmpdir(), '.fuels-ts', randomUUID());
-
-    if (!existsSync(tempDirPath)) {
-      mkdirSync(tempDirPath, { recursive: true });
-    }
-    const chainConfigPath = join(tempDirPath, '.chainConfig.json');
-
-    // Write a temporary chain configuration file.
-    await writeFile(chainConfigPath, JSON.stringify(chainConfig), 'utf-8');
-
+    // #region TestNodeLauncher-custom-chain-config
     process.env.DEFAULT_CHAIN_CONFIG_PATH = chainConfigPath;
 
     await using launched = await TestNodeLauncher.launch();
+    // #endregion
+    cleanup();
+
     const { provider } = launched;
 
     const { name } = await provider.fetchChain();
 
     expect(name).toEqual(chainName);
+  });
+
+  test('chain config from environment variable can be extended manually', async () => {
+    const chainName = 'gimme_fuel';
+    const [chainConfigPath, cleanup] = await generateChainConfigFile(chainName);
+
+    process.env.DEFAULT_CHAIN_CONFIG_PATH = chainConfigPath;
+
+    // eslint-disable-next-line @typescript-eslint/naming-convention
+    const max_inputs = randomInt(200);
+    await using launched = await TestNodeLauncher.launch({
+      nodeOptions: {
+        chainConfig: {
+          transaction_parameters: {
+            max_inputs,
+          },
+        },
+      },
+    });
+
+    cleanup();
+    const { provider } = launched;
+
+    const {
+      name,
+      consensusParameters: { maxInputs },
+    } = await provider.fetchChain();
+    expect(name).toEqual(chainName);
+    expect(maxInputs.toNumber()).toEqual(max_inputs);
   });
 });

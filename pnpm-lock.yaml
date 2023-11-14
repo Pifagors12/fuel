@@ -580,10 +580,16 @@ importers:
       ethers:
         specifier: ^6.7.1
         version: 6.7.1
+      ramda:
+        specifier: ^0.29.0
+        version: 0.29.0
     devDependencies:
       '@fuel-ts/forc':
         specifier: workspace:*
         version: link:../forc
+      '@types/ramda':
+        specifier: ^0.29.3
+        version: 0.29.3
 
   packages/crypto:
     dependencies:

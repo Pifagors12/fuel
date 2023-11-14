@@ -8,6 +8,7 @@ import type { WalletUnlocked } from '@fuel-ts/wallet';
 import type { LaunchCustomProviderAndGetWalletsOptions } from '@fuel-ts/wallet/test-utils';
 import { launchCustomProviderAndGetWallets } from '@fuel-ts/wallet/test-utils';
 import { readFileSync } from 'fs';
+import { mergeDeepRight } from 'ramda';
 
 import type { DeployContractOptions } from '../contract-factory';
 import ContractFactory from '../contract-factory';
@@ -52,12 +53,8 @@ export class TestNodeLauncher {
     }: Partial<TestNodeLauncherOptions> = {},
     dispose?: Dispose
   ): Promise<ReturnType> {
-    let chainConfig: ChainConfig | undefined;
-    if (process.env.DEFAULT_CHAIN_CONFIG_PATH) {
-      chainConfig = JSON.parse(
-        readFileSync(process.env.DEFAULT_CHAIN_CONFIG_PATH, 'utf-8')
-      ) as ChainConfig;
-    }
+    const chainConfig = TestNodeLauncher.getChainConfig(nodeOptions);
+
     const { provider, wallets, cleanup } = await launchCustomProviderAndGetWallets(
       {
         walletConfig,
@@ -147,5 +144,16 @@ export class TestNodeLauncher {
         storageSlots: deployOptions?.storageSlots ?? storageSlots,
       },
     };
+  }
+
+  private static getChainConfig(nodeOptions: TestNodeLauncherOptions['nodeOptions']) {
+    let envChainConfig: ChainConfig | undefined;
+    if (process.env.DEFAULT_CHAIN_CONFIG_PATH) {
+      envChainConfig = JSON.parse(
+        readFileSync(process.env.DEFAULT_CHAIN_CONFIG_PATH, 'utf-8')
+      ) as ChainConfig;
+    }
+
+    return mergeDeepRight(envChainConfig ?? {}, nodeOptions.chainConfig ?? {});
   }
 }
