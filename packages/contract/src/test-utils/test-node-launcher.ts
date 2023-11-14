@@ -106,21 +106,10 @@ export class TestNodeLauncher {
         return TestNodeLauncher.prepareContractFactory(config, undefined, wallets[0]);
       }
 
-      const validWalletIndex = config.walletIndex
-        ? config.walletIndex >= 0 && config.walletIndex < wallets.length
-        : true;
-
-      if (!validWalletIndex) {
-        throw new FuelError(
-          FuelError.CODES.INVALID_INPUT_PARAMETERS,
-          `Invalid walletIndex ${config.walletIndex}; wallets array contains ${wallets.length} elements.`
-        );
-      }
-
       return TestNodeLauncher.prepareContractFactory(
         config.contractDir,
         config.options,
-        wallets[config.walletIndex ?? 0]
+        TestNodeLauncher.getWalletForDeployment(config, wallets)
       );
     });
 
@@ -151,6 +140,21 @@ export class TestNodeLauncher {
         storageSlots: deployOptions?.storageSlots ?? storageSlots,
       },
     };
+  }
+
+  private static getWalletForDeployment(config: DeployContractConfig, wallets: WalletUnlocked[]) {
+    if (!config.walletIndex) return wallets[0];
+
+    const validWalletIndex = config.walletIndex >= 0 && config.walletIndex < wallets.length;
+
+    if (!validWalletIndex) {
+      throw new FuelError(
+        FuelError.CODES.INVALID_INPUT_PARAMETERS,
+        `Invalid walletIndex ${config.walletIndex}; wallets array contains ${wallets.length} elements.`
+      );
+    }
+
+    return wallets[config.walletIndex];
   }
 
   private static getChainConfig(nodeOptions: TestNodeLauncherOptions['nodeOptions']) {
