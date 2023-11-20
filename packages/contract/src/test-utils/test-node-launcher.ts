@@ -132,7 +132,10 @@ export class TestNodeLauncher {
     deployOptions: DeployContractConfig['options'],
     wallet: WalletUnlocked
   ) {
-    const { abiContents, binHexlified, storageSlots } = getForcProject<JsonAbi>(contractDir);
+    const { abiContents, binHexlified, storageSlots } = getForcProject<JsonAbi>({
+      projectDir: contractDir,
+      projectName: '',
+    });
 
     const factory = new ContractFactory(binHexlified, abiContents, wallet);
     return {
