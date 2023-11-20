@@ -123,8 +123,9 @@ describe('launchCustomProviderAndGetWallets', () => {
       expect(coins.length).toBe(numOfAssets * coinsPerAsset);
 
       coins.forEach((coin, index) => {
-        if (index < coinsPerAsset) expect(coin.assetId).toBe(BaseAssetId);
-        else {
+        if (index < coinsPerAsset) {
+          expect(coin.assetId).toBe(BaseAssetId);
+        } else {
           expect(coin.assetId).not.toBe(BaseAssetId);
           expect(coin.assetId).not.toBeFalsy();
         }

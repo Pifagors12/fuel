@@ -99,7 +99,9 @@ export class TestNodeLauncher {
   ) {
     const contracts: Contract[] = [];
 
-    if (deployContracts.length === 0) return contracts;
+    if (deployContracts.length === 0) {
+      return contracts;
+    }
 
     const factories = deployContracts.map((config) => {
       if (typeof config === 'string') {
@@ -143,7 +145,9 @@ export class TestNodeLauncher {
   }
 
   private static getWalletForDeployment(config: DeployContractConfig, wallets: WalletUnlocked[]) {
-    if (!config.walletIndex) return wallets[0];
+    if (!config.walletIndex) {
+      return wallets[0];
+    }
 
     const validWalletIndex = config.walletIndex >= 0 && config.walletIndex < wallets.length;
 

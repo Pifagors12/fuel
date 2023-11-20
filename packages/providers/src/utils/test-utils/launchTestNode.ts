@@ -95,7 +95,9 @@ export const launchTestNode = async ({
         kill(Number(child.pid), (err) => {
           removeSideffects();
 
-          if (err) rejectFn(err);
+          if (err) {
+            rejectFn(err);
+          }
           resolveFn();
         });
       });
@@ -120,7 +122,9 @@ export const launchTestNode = async ({
 
     // Look for a specific graphql start point in the output.
     child!.stderr.on('data', (chunk: string) => {
-      if (logger) logger(chunk);
+      if (logger) {
+        logger(chunk);
+      }
 
       if (chunk.indexOf(graphQLStartSubstring) !== -1) {
         const [nodeIp, nodePort] = chunk.split(' ').at(-1)!.trim().split(':');
