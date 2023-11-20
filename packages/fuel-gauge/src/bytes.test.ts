@@ -2,8 +2,7 @@ import { TestNodeLauncher } from '@fuel-ts/test-utils';
 import { bn, Predicate, Wallet, Address, BaseAssetId } from 'fuels';
 import type { BN } from 'fuels';
 
-import predicateBytes from '../fixtures/forc-projects/predicate-bytes';
-import predicateBytesAbi from '../fixtures/forc-projects/predicate-bytes/out/debug/predicate-bytes-abi.json';
+import { FuelGaugeProjectsEnum, getFuelGaugeForcProject } from '../test/fixtures';
 
 import { getProgramDir, getScript } from './utils';
 
@@ -111,7 +110,12 @@ describe('Bytes Tests', () => {
     const amountToPredicate = 500_000;
     const amountToReceiver = 50;
     type MainArgs = [Wrapper];
-    const predicate = new Predicate<MainArgs>(predicateBytes, wallet.provider, predicateBytesAbi);
+
+    const { binHexlified, abiContents } = getFuelGaugeForcProject(
+      FuelGaugeProjectsEnum.PREDICATE_BYTES
+    );
+
+    const predicate = new Predicate<MainArgs>(binHexlified, wallet.provider, abiContents);
 
     // setup predicate
     const setupTx = await wallet.transfer(predicate.address, amountToPredicate, BaseAssetId, {
