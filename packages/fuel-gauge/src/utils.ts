@@ -80,4 +80,5 @@ export const getScript = <TInput extends unknown[], TOutput>(
       )
   );
 
-export const getProgramDir = (name: string) => join(__dirname, `../fixtures/forc-projects/${name}`);
+export const getProgramDir = (name: string) =>
+  join(__dirname, `../test/fixtures/forc-projects/${name}`);
