@@ -1,6 +1,6 @@
 /* eslint-disable max-classes-per-file */
 
-import { Coder, ArrayCoder, U64Coder, B256Coder, NumberCoder } from '@fuel-ts/abi-coder';
+import { Coder, ArrayCoder, U64Coder, B256Coder, NumberCoder, WORD_SIZE } from '@fuel-ts/abi-coder';
 import { ErrorCode, FuelError } from '@fuel-ts/errors';
 import { type BN } from '@fuel-ts/math';
 import { concat } from '@fuel-ts/utils';
@@ -90,7 +90,24 @@ export class TransactionScriptCoder extends Coder<TransactionScript, Transaction
     parts.push(new ByteArrayCoder(value.scriptLength).encode(value.script));
     parts.push(new ByteArrayCoder(value.scriptDataLength).encode(value.scriptData));
     parts.push(new PoliciesCoder().encode(value.policies));
-    parts.push(new ArrayCoder(new InputCoder(), value.inputsCount).encode(value.inputs));
+    parts.push(
+      new ArrayCoder(new InputCoder(), value.inputsCount).encode(
+        value.inputs.map((input) => {
+          // @ts-expect-error asdf
+          if (!input.getPredicateData) {
+            return input;
+          }
+
+          // @ts-expect-error this is a hack
+          const predicateData = input.getPredicateData(value.policies.length);
+          return {
+            ...input,
+            predicateData,
+            predicateDataLength: predicateData.length,
+          };
+        })
+      )
+    );
     parts.push(new ArrayCoder(new OutputCoder(), value.outputsCount).encode(value.outputs));
     parts.push(new ArrayCoder(new WitnessCoder(), value.witnessesCount).encode(value.witnesses));
 

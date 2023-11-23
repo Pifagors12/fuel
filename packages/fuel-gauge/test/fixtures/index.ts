@@ -19,6 +19,7 @@ export enum FuelGaugeProjectsEnum {
   PAYABLE_ANNOTATION = 'payable-annotation',
   PREDICATE_ADDRESS = 'predicate-address',
   PREDICATE_BYTES = 'predicate-bytes',
+  PREDICATE_BYTES_SIMPLE = 'predicate-bytes-simple',
   PREDICATE_CONDITIONAL_INPUTS = 'predicate-conditional-inputs',
   PREDICATE_FALSE = 'predicate-false',
   PREDICATE_MAIN_ARGS_STRUCT = 'predicate-main-args-struct',

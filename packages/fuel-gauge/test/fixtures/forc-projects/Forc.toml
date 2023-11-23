@@ -16,6 +16,7 @@ members = [
   "payable-annotation",
   "predicate-address",
   "predicate-bytes",
+  "predicate-bytes-simple",
   "predicate-conditional-inputs",
   "predicate-false",
   "predicate-main-args-struct",

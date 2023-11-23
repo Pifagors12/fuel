@@ -328,6 +328,8 @@ export abstract class BaseTransactionRequest implements BaseTransactionRequestLi
       witnessIndex,
       predicate: predicate?.bytes,
       predicateData: predicate?.predicateData,
+      // @ts-expect-error this is a hack
+      getPredicateData: predicate?.getPredicateData,
     };
 
     // Insert the Input

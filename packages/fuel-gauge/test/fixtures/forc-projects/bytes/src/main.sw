@@ -40,6 +40,9 @@ impl MyContract for Contract {
     fn accept_nested_bytes(wrapper: Wrapper<Vec<Bytes>>) {
         if let SomeEnum::Second(enum_bytes) = wrapper.inner_enum {
             let exp = expected_bytes();
+            assert_eq(exp.get(0).unwrap(), 40u8);
+            assert_eq(exp.get(1).unwrap(), 41u8);
+            assert_eq(exp.get(2).unwrap(), 42u8);
             require(
                 enum_bytes
                     .get(0)

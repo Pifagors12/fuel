@@ -488,6 +488,8 @@ export default class Provider {
     await this.estimateTxDependencies(transactionRequest);
     // #endregion Provider-sendTransaction
 
+    const leBytes = Array.from(transactionRequest.toTransactionBytes());
+
     const encodedTransaction = hexlify(transactionRequest.toTransactionBytes());
     const { gasUsed, minGasPrice } = await this.getTransactionCost(transactionRequest);
 

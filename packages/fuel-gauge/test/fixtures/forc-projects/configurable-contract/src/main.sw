@@ -26,7 +26,7 @@ configurable {
         tag: __to_str_array("000"),
         age: 21,
         scores: [1, 3, 4],
-    },
+    }
 }
 
 abi ConfigurableContract {

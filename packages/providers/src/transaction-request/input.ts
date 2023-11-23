@@ -112,6 +112,8 @@ export const inputify = (value: TransactionRequestInput): Input => {
         predicateDataLength: predicateData.length,
         predicate: hexlify(predicate),
         predicateData: hexlify(predicateData),
+        // @ts-expect-error hackerrs
+        getPredicateData: value.getPredicateData,
       };
     }
     case InputType.Contract: {

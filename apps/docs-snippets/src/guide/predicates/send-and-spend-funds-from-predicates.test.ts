@@ -15,7 +15,7 @@ import {
 } from '../../../test/fixtures/forc-projects';
 import { getTestWallet } from '../../utils';
 
-describe(__filename, () => {
+describe('asd', () => {
   let walletWithFunds: WalletUnlocked;
   let gasPrice: BN;
   const { abiContents: abi, binHexlified: bin } = getDocsSnippetsForcProject(

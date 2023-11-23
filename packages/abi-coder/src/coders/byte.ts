@@ -43,7 +43,10 @@ export class ByteCoder extends Coder<number[], Uint8Array> {
   }
 
   #getPaddedData(value: number[]): Uint8Array {
-    const data: Uint8Array[] = [Uint8Array.from(value)];
+    const data: Uint8Array[] = [
+      // Uint8Array.from(value.map((num) => [num, 0, 0, 0, 0, 0, 0, 0]).flatMap((x) => x)),
+      Uint8Array.from(value),
+    ];
 
     const paddingLength = (WORD_SIZE - (value.length % WORD_SIZE)) % WORD_SIZE;
     if (paddingLength) {

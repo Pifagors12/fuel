@@ -365,7 +365,7 @@ describe('Predicate', () => {
       const initialReceiverBalance = await receiver.getBalance();
 
       const tx = await predicate
-        .setData([42])
+        .setData([42, 45])
         .transfer(receiver.address, amountToReceiver, BaseAssetId, { gasPrice });
       await tx.waitForResult();
 
