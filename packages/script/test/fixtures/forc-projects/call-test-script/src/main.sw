@@ -21,6 +21,7 @@ struct MyStruct {
 
 fn main() -> MyStruct {
     let my_struct = tx_script_data::<MyStruct>();
+    assert_eq(my_struct.arg_one, true);
     log(my_struct.arg_one);
     log(my_struct.arg_two);
     MyStruct {

@@ -82,29 +82,6 @@ describe('Bytes Tests', () => {
       .txParams({ gasPrice })
       .call<number[]>();
     expect(value).toBeUndefined();
-
-    const wallet = await setup(1_000_000);
-    const receiver = Wallet.fromAddress(Address.fromRandom(), wallet.provider);
-    const amountToPredicate = 500_000;
-    const amountToReceiver = 50;
-    type MainArgs = [Wrapper];
-
-    const { binHexlified, abiContents } = getFuelGaugeForcProject(
-      FuelGaugeProjectsEnum.PREDICATE_BYTES
-    );
-
-    const predicate = new Predicate<MainArgs>(binHexlified, wallet.provider, abiContents);
-
-    // setup predicate
-    const setupTx = await wallet.transfer(predicate.address, amountToPredicate, BaseAssetId, {
-      gasPrice,
-    });
-    await setupTx.waitForResult();
-
-    const tx = await predicate
-      .setData(INPUT)
-      .transfer(receiver.address, amountToReceiver, BaseAssetId, { gasPrice });
-    await tx.waitForResult();
   });
 
   it('should test bytes input [predicate-bytes-simple]', async () => {
