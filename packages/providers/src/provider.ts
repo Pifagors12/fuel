@@ -1,4 +1,5 @@
 import { Address } from '@fuel-ts/address';
+import { BaseAssetId } from '@fuel-ts/address/configs';
 import { ErrorCode, FuelError } from '@fuel-ts/errors';
 import type { AbstractAddress } from '@fuel-ts/interfaces';
 import type { BN } from '@fuel-ts/math';
@@ -40,8 +41,6 @@ import { TransactionResponse } from './transaction-response';
 import { processGqlReceipt } from './transaction-summary/receipt';
 import {
   calculatePriceWithFactor,
-  calculateTransactionFee,
-  calculateTxChargeableBytes,
   fromUnixToTai64,
   getGasUsedFromReceipts,
   getReceiptsWithMissingData,
@@ -240,7 +239,9 @@ export type TransactionCostParams = EstimateTransactionParams & EstimatePredicat
 /**
  * Provider Call transaction params
  */
-export type ProviderCallParams = UTXOValidationParams & EstimateTransactionParams;
+export type ProviderCallParams = UTXOValidationParams &
+  EstimateTransactionParams &
+  EstimatePredicateParams;
 
 /**
  * Provider Send transaction params
@@ -558,11 +559,15 @@ export default class Provider {
    */
   async call(
     transactionRequestLike: TransactionRequestLike,
-    { utxoValidation, estimateTxDependencies = true }: ProviderCallParams = {}
+    {
+      utxoValidation,
+      estimateTxDependencies = true,
+      estimatePredicates = true,
+    }: ProviderCallParams = {}
   ): Promise<CallResult> {
     const transactionRequest = transactionRequestify(transactionRequestLike);
     if (estimateTxDependencies) {
-      await this.estimateTxDependencies(transactionRequest);
+      await this.estimateTxDependencies(transactionRequest, { estimatePredicates });
     }
     const encodedTransaction = hexlify(transactionRequest.toTransactionBytes());
     const { dryRun: gqlReceipts } = await this.operations.dryRun({
@@ -618,7 +623,10 @@ export default class Provider {
    * @param transactionRequest - The transaction request object.
    * @returns A promise.
    */
-  async estimateTxDependencies(transactionRequest: TransactionRequest): Promise<void> {
+  async estimateTxDependencies(
+    transactionRequest: TransactionRequest,
+    { estimatePredicates = true }: EstimatePredicateParams = {}
+  ): Promise<void> {
     let missingOutputVariableCount = 0;
     let missingOutputContractIdsCount = 0;
     let tries = 0;
@@ -627,9 +635,12 @@ export default class Provider {
       return;
     }
 
-    const encodedTransaction = transactionRequest.hasPredicateInput()
-      ? hexlify((await this.estimatePredicates(transactionRequest)).toTransactionBytes())
-      : hexlify(transactionRequest.toTransactionBytes());
+    let encodedTransaction = hexlify(transactionRequest.toTransactionBytes());
+    if (estimatePredicates && transactionRequest.hasPredicateInput()) {
+      encodedTransaction = hexlify(
+        (await this.estimatePredicates(transactionRequest)).toTransactionBytes()
+      );
+    }
 
     do {
       const { dryRun: gqlReceipts } = await this.operations.dryRun({
@@ -688,6 +699,36 @@ export default class Provider {
     };
   }
 
+  async getResourcesForTransaction(
+    owner: AbstractAddress,
+    transactionRequestLike: TransactionRequestLike,
+    forwardingQuantities: CoinQuantity[] = []
+  ) {
+    const transactionRequest = transactionRequestify(clone(transactionRequestLike));
+    const transactionCost = await this.getTransactionCost(transactionRequest, forwardingQuantities);
+    // Add the required resources to the transaction from the owner
+    transactionRequest.addResources(
+      await this.getResourcesToSpend(owner, transactionCost.requiredQuantities)
+    );
+    // Refetch transaction costs with the new resources
+    // TODO: we could find a way to avoid fetch estimatePredicates again, by returning the transaction or
+    // returning a specific gasUsed by the predicate.
+    // Also for the dryRun we could have the same issue as we are going to run twice the dryRun and the
+    // estimateTxDependencies as we don't have access to the transaction, maybe returning the transaction would
+    // be better.
+    const { requiredQuantities, ...txCost } = await this.getTransactionCost(
+      transactionRequest,
+      forwardingQuantities
+    );
+    const resources = await this.getResourcesToSpend(owner, requiredQuantities);
+
+    return {
+      resources,
+      requiredQuantities,
+      ...txCost,
+    };
+  }
+
   /**
    * Returns a transaction cost to enable user
    * to set gasLimit and also reserve balance amounts
@@ -738,7 +779,7 @@ export default class Provider {
     // Getting coin quantities from amounts being transferred
     const coinOutputsQuantities = transactionRequest.getCoinOutputsQuantities();
     // Combining coin quantities from amounts being transferred and forwarding to contracts
-    const allQuantities = mergeQuantities(coinOutputsQuantities, forwardingQuantities);
+    let allQuantities = mergeQuantities(coinOutputsQuantities, forwardingQuantities);
     // Funding transaction with fake utxos
     transactionRequest.fundWithFakeUtxos(allQuantities);
 
@@ -760,11 +801,21 @@ export default class Provider {
 
       // Executing dryRun with fake utxos to get gasUsed
       const result = await this.call(transactionRequest, {
+        estimatePredicates: false,
         estimateTxDependencies,
       });
       receipts = result.receipts;
       gasUsed = getGasUsedFromReceipts(receipts);
     }
+    // Calculate usedFee
+    const usedFee = calculatePriceWithFactor(max(minGas, gasUsed), gasPrice, gasPriceFactor);
+    // Add to required quantities the usedFee on the transaction
+    allQuantities = mergeQuantities(allQuantities, [
+      {
+        assetId: BaseAssetId,
+        amount: usedFee,
+      },
+    ]);
 
     return {
       requiredQuantities: allQuantities,
@@ -774,7 +825,7 @@ export default class Provider {
       gasPrice,
       minGas,
       maxGas,
-      usedFee: calculatePriceWithFactor(gasUsed, gasPrice, gasPriceFactor),
+      usedFee,
       minFee: calculatePriceWithFactor(minGas, gasPrice, gasPriceFactor),
       maxFee: calculatePriceWithFactor(maxGas, gasPrice, gasPriceFactor),
     };

@@ -217,4 +217,45 @@ describe(__filename, () => {
     expect(status).toBe(TransactionStatus.success);
     expect(gasUsed.toString()).toBe(txCost.gasUsed.toString());
   });
+
+  it('Otherflow with dust coins', async () => {
+    const provider = await Provider.create(FUEL_NETWORK_URL);
+    const sender = Wallet.generate({ provider });
+    await Array.from({ length: 100 })
+      .fill(100)
+      .reduce(async (promise, amount) => {
+        await promise;
+        await seedTestWallet(sender, [[amount as number, BaseAssetId]]);
+      }, Promise.resolve());
+
+    /**
+     * Create a script transaction
+     */
+    const { binHexlified } = getDocsSnippetsForcProject(DocSnippetProjectsEnum.COMPLEX_SCRIPT);
+    const request = new ScriptTransactionRequest({
+      script: binHexlified,
+      scriptData: hexlify(new U64Coder().encode(bn(2000))),
+    });
+    request.addCoinOutput(Address.fromRandom(), bn(4900), BaseAssetId);
+
+    /**
+     * Get the transaction cost to se a strict gasLimit and min gasPrice
+     */
+    const { resources, gasUsed, gasPrice } = await provider.getResourcesForTransaction(
+      sender.address,
+      request
+    );
+    request.addResources(resources);
+    request.gasLimit = gasUsed;
+    request.gasPrice = gasPrice;
+
+    // /**
+    //  * Send transaction
+    //  */
+    const result = await sender.sendTransaction(request);
+    const { status, receipts } = await result.waitForResult();
+
+    expect(status).toBe(TransactionStatus.success);
+    expect(getGasUsedFromReceipts(receipts).toString()).toBe(gasUsed.toString());
+  });
 });
