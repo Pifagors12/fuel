@@ -1,5 +1,11 @@
 # Change Log
 
+## 0.70.0
+
+### Minor Changes
+
+- add support for TX policies, by [@Torres-ssf](https://github.com/Torres-ssf) (See [#1437](https://github.com/FuelLabs/fuels-ts/pull/1437))
+
 ## 0.69.1
 
 ## 0.69.0
